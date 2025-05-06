@@ -4,14 +4,17 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "module",
   "main": "build/index.js",
   "scripts": {
     "build": "npx tsc",
     "start": "node build/index.js",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon src/index.ts",
+    "db:migrate": "prisma migrate dev --skip-generate",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^6.7.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -20,6 +23,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
+    "prisma": "^6.7.0",
     "typescript": "^5.8.3"
   }
 }
