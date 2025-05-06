@@ -5,10 +5,10 @@
   "license": "ISC",
   "author": "",
   "main": "build/index.js",
+  "type": "commonjs",
   "scripts": {
-    "build": "npx tsc",
-    "start": "node build/index.js",
-    "dev": "nodemon src/index.ts",
+    "start": "ts-node --files -r tsconfig-paths/register src/index.ts",
+    "dev": "ts-node-dev --files -r tsconfig-paths/register src/index.ts",
     "db:migrate": "prisma migrate dev --skip-generate",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate"
@@ -18,12 +18,15 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "nodemon": "^3.1.10"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "prisma": "^6.7.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }
