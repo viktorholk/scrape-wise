@@ -1,9 +1,6 @@
-import { initScraper } from "@/controllers/scraper";
-import requestHandler from "@/lib/utils";
 import { Router } from "express";
-
+import usersRouter from "./users";
 const router = Router();
 
-router.use('/scraper', requestHandler(initScraper))
-
+router.use('/users', usersRouter)
 export default router;
