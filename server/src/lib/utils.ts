@@ -6,10 +6,10 @@ export default function requestHandler(
 ): RequestHandler {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(handler(req, res, next))
-      .catch((error) => {
-        if (error instanceof AppError) {
+      .catch((error: any) => {
+        if (error && (error._isAppError === true || error instanceof AppError)) {
           if (!res.headersSent) {
-            res.status(error.statusCode).json({
+            res.status(error.statusCode || 500).json({
               message: error.message,
             });
           }
@@ -24,7 +24,7 @@ export default function requestHandler(
               : {}),
           });
         }
-        console.error("Unhandled error in requestHandler:", error);
+        console.error("Unhandled error (not an AppError) in requestHandler:", error);
       });
   };
 }
