@@ -1,13 +1,11 @@
 import { prisma } from "@/lib/database";
 import { BadRequestError, AuthenticationError } from "@/lib/errors";
-import requestHandler from "@/lib/utils";
+import { requestHandler } from "@/lib/utils";
 import { Router, Request, Response } from "express";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { signToken } from "@/lib/utils/jwt";
 
 const router = Router();
-
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret"; // Replace with a secure secret in production
 
 router.post('/', requestHandler(async (req: Request, res: Response): Promise<void> => {
     const email = req.body?.email;
@@ -27,9 +25,9 @@ router.post('/', requestHandler(async (req: Request, res: Response): Promise<voi
         throw new AuthenticationError("wrong email or password");
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+    const token = signToken({ userId: user.id });
 
-    res.status(200).json({ message: "User authenticated", token });
+    res.status(200).json({ token });
 }));
 
 export default router;

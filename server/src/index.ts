@@ -1,10 +1,10 @@
-import express, { Express, Request, Response, Application } from 'express';
+import express, { Application } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 dotenv.config();
 
-import { prisma } from './lib/database';
 import routes from './routes/index';
+
 const app: Application = express();
 const port = process.env.PORT || 8000;
 
