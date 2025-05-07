@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/database";
 import { BadRequestError, Conflict } from "@/lib/errors";
-import requestHandler from "@/lib/utils";
+import { requestHandler } from "@/lib/utils";
 import { Router, Request, Response } from "express";
 import bcrypt from "bcrypt"; // Import bcrypt
 

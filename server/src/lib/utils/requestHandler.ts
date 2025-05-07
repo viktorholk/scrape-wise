@@ -1,9 +1,9 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
-import { AppError } from "./errors";
+import { AppError } from "@/lib/errors";
 
-export default function requestHandler(
+const requestHandler = (
   handler: (req: Request, res: Response, next?: NextFunction) => Promise<void> | void,
-): RequestHandler {
+): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(handler(req, res, next))
       .catch((error: any) => {
@@ -28,3 +28,5 @@ export default function requestHandler(
       });
   };
 }
+
+export { requestHandler}

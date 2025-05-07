@@ -15,13 +15,35 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
   firstName String?
-  lastName String?
+  lastName  String?
 
   password String
 
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  CrawlerJob CrawlerJob[]
+}
+
+model CrawlerJob {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  user       User             @relation(fields: [userId], references: [id])
+  initialUrl String
+  crawlDepth Int
+  pageLimit  Int
+  status     CrawlerJobStatus @default(STARTED)
+  results    Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([userId])
+}
+
+enum CrawlerJobStatus {
+  STARTED
+  COMPLETED
+  ERROR
 }
