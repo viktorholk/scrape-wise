@@ -2,14 +2,15 @@ import { prisma } from "@/lib/database";
 import { BadRequestError, Conflict } from "@/lib/errors";
 import requestHandler from "@/lib/utils";
 import { Router, Request, Response } from "express";
+import bcrypt from "bcrypt"; // Import bcrypt
 
 const router = Router();
 
 router.post('/', requestHandler(async (req: Request, res: Response): Promise<void> => {
-    const email = req.body?.email;
+    const { email, password } = req.body;
 
-    if (!email) {
-        throw new BadRequestError("Email is required");
+    if (!email || !password) {
+        throw new BadRequestError("Email and password are required");
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -18,11 +19,18 @@ router.post('/', requestHandler(async (req: Request, res: Response): Promise<voi
         throw new Conflict("User already exists");
     }
 
-    const newUser = await prisma.user.create({ data: { email, password: "TEMPORARY_PASSWORD" } });
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await prisma.user.create({ 
+        data: { 
+            email, 
+            password: hashedPassword 
+        } 
+    });
 
     const { password: _, ...userData } = newUser;
     res.status(201).json({ user: userData });
-
 }));
 
 export default router;
