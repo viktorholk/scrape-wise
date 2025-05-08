@@ -1,24 +1,5 @@
-import * as React from "react"
-import {
-  BookOpen,
-  Bot,
-  ChevronRight,
-  Columns,
-  Command,
-  Frame,
-  LayoutGrid,
-  LifeBuoy,
-  List,
-  LogOut,
-  Map,
-  MoreVerticalIcon,
-  PieChart,
-  Send,
-  Settings2,
-  SquareTerminal,
-  UserIcon,
-  Users,
-} from "lucide-react"
+import * as React from "react";
+import { LayoutGrid, List, MoreVerticalIcon, UserIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -35,16 +16,20 @@ import {
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { Toaster } from "sonner"
-import { Link, useLocation, Outlet } from "react-router-dom"
-import { CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible"
-import { Avatar, AvatarFallback } from "./ui/avatar"
-import { Collapsible } from "./ui/collapsible"
-import { cn } from "@/lib/utils"
-import LogoutButton from "./LogoutButton"
-import ProtectedRoute from "./ProtectedRoute"
+} from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Toaster } from "sonner";
+import { Link, useLocation, Outlet } from "react-router-dom";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { cn } from "@/lib/utils";
+import LogoutButton from "./LogoutButton";
+import ProtectedRoute from "./ProtectedRoute";
 export interface AppSidebarItem {
   title: string;
   url: string;
@@ -94,12 +79,10 @@ function SidebarLayout({
       </SidebarHeader>
       <SidebarContent>
         {sidebarGroups.map((group) => {
-
           return (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
               <SidebarGroupContent>
-
                 <SidebarMenu>
                   {group.items.map((item: AppSidebarItem) => (
                     <SidebarMenuItem key={item.title}>
@@ -107,7 +90,8 @@ function SidebarLayout({
                         asChild
                         tooltip={item.title}
                         className={cn(
-                          isItemActive(item) && 'bg-accent text-accent-foreground'
+                          isItemActive(item) &&
+                            "bg-accent text-accent-foreground"
                         )}
                       >
                         <Link to={item.url}>
@@ -120,9 +104,7 @@ function SidebarLayout({
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-
           );
-
         })}
       </SidebarContent>
       <SidebarFooter>
@@ -135,10 +117,14 @@ function SidebarLayout({
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg grayscale">
-                    <AvatarFallback className="rounded-lg"><UserIcon className="h-4 w-4" /></AvatarFallback>
+                    <AvatarFallback className="rounded-lg">
+                      <UserIcon className="h-4 w-4" />
+                    </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsed=true]:hidden">
-                    <span className="truncate font-medium">{user.firstName} {user.lastName}</span>
+                    <span className="truncate font-medium">
+                      {user.firstName} {user.lastName}
+                    </span>
                     <span className="truncate text-xs text-muted-foreground">
                       {user.email}
                     </span>
@@ -155,17 +141,27 @@ function SidebarLayout({
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
-
-                      <AvatarFallback className="rounded-lg"><UserIcon className="h-4 w-4" /></AvatarFallback>
+                      <AvatarFallback className="rounded-lg">
+                        <UserIcon className="h-4 w-4" />
+                      </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-medium">{user.firstName} {user.lastName}</span>
+                      <span className="truncate font-medium">
+                        {user.firstName} {user.lastName}
+                      </span>
                       <span className="truncate text-xs text-muted-foreground">
                         {user.email}
                       </span>
                     </div>
                   </div>
                 </DropdownMenuLabel>
+                <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <LogoutButton />
                 </DropdownMenuItem>
@@ -179,24 +175,31 @@ function SidebarLayout({
 }
 
 export function AppLayout() {
-
   const location = useLocation();
   const isItemActive = (item: AppSidebarItem) => {
-    return location.pathname === item.url || location.pathname.startsWith(`${item.url}/`);
+    return (
+      location.pathname === item.url ||
+      location.pathname.startsWith(`${item.url}/`)
+    );
   };
 
   const sidebarGroups: AppSidebarGroup[] = [
     {
-      title: 'dashboard',
+      title: "dashboard",
       items: [
         {
-          title: 'dashboard',
-          url: '/dashboard',
+          title: "dashboard",
+          url: "/dashboard",
           icon: LayoutGrid,
         },
         {
-          title: 'Jobs',
-          url: '/jobs',
+          title: "scraper search",
+          url: "/scraper-search",
+          icon: LayoutGrid,
+        },
+        {
+          title: "Jobs",
+          url: "/jobs",
           icon: List,
         },
       ],
@@ -207,25 +210,25 @@ export function AppLayout() {
     <ProtectedRoute>
       <SidebarProvider defaultOpen={true}>
         <SidebarLayout
-        user={{
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john.doe@example.com'
-        }}
-        sidebarGroups={sidebarGroups}
-        isItemActive={isItemActive}
-      />
+          user={{
+            firstName: "John",
+            lastName: "Doe",
+            email: "john.doe@example.com",
+          }}
+          sidebarGroups={sidebarGroups}
+          isItemActive={isItemActive}
+        />
 
-      <SidebarInset>
-        <header className="sticky top-0 z-10 border-b bg-background p-4 shadow-sm">
-          <SidebarTrigger />
-        </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
-          <Outlet />
-        </main>
-      </SidebarInset>
-      <Toaster />
-    </SidebarProvider>
+        <SidebarInset>
+          <header className="sticky top-0 z-10 border-b bg-background p-4 shadow-sm">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <Outlet />
+          </main>
+        </SidebarInset>
+        <Toaster />
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }

@@ -15,6 +15,9 @@ router.get('/', authMiddleware, requestHandler(async (req: Request, res: Respons
         },
         select: {
             id: true,
+            initialUrl: true,
+            crawlDepth: true,
+            pageLimit: true,
             createdAt: true,
             status: true,
             results: true,
