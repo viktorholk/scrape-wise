@@ -1,161 +1,44 @@
-import { useState, useCallback } from 'react'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScanSearch, Loader2, CheckCircle, AlertTriangle, PencilLine, FileText } from 'lucide-react'
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import React from 'react';
 
-interface ScrapeJob {
-  id: string;
-  url: string;
-  prompt: string;
-  status: 'loading' | 'completed' | 'error';
-  results?: any;
-  error?: string;
+interface ScraperJob {
+  id: number;
+  name: string;
+  status: string;
+  lastRun: string;
 }
 
-export default function Dashboard() {
-  const [url, setUrl] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [jobs, setJobs] = useState<ScrapeJob[]>([]);
+const mockScraperJobs: ScraperJob[] = [
+  { id: 1, name: 'Job 1', status: 'Completed', lastRun: '2023-10-01' },
+  { id: 2, name: 'Job 2', status: 'Running', lastRun: '2023-10-02' },
+  { id: 3, name: 'Job 3', status: 'Failed', lastRun: '2023-10-03' },
+];
 
-  const updateJobStatus = useCallback((id: string, status: ScrapeJob['status'], data?: any) => {
-    setJobs(prevJobs =>
-      prevJobs.map(job =>
-        job.id === id
-          ? { ...job, status, results: status === 'completed' ? data : undefined, error: status === 'error' ? data : undefined }
-          : job
-      )
-    );
-  }, []);
-
-  const handleSubmit = () => {
-    if (!url) return;
-
-    const newJobId = Date.now().toString() + Math.random().toString();
-    const newJob: ScrapeJob = {
-      id: newJobId,
-      url,
-      prompt,
-      status: 'loading',
-    };
-
-    console.log("Adding new job:", newJob);
-    setJobs(prevJobs => [newJob, ...prevJobs]);
-
-    setUrl('');
-    setPrompt('');
-
-    setTimeout(() => {
-      const success = Math.random() > 0.3;
-      if (success) {
-        console.log(`Job ${newJobId} completed successfully.`);
-        updateJobStatus(newJobId, 'completed', { message: `Scraped data for ${newJob.url}` });
-      } else {
-        console.log(`Job ${newJobId} failed.`);
-        updateJobStatus(newJobId, 'error', 'Failed to scrape the URL.');
-      }
-    }, 2000 + Math.random() * 3000);
-  };
-
+const Dashboard: React.FC = () => {
   return (
-    <div className=" flex flex-col items-center p-4">
-      <header className="w-full max-w-4xl mb-8 flex items-center justify-center py-4 border-b border-gray-300 dark:border-gray-700">
-        <ScanSearch className="h-8 w-8 mr-3 text-blue-600 dark:text-blue-400" />
-        <h1 className="text-3xl font-bold tracking-tight text-gray-800 dark:text-gray-200">
-          Scrape Wise
-        </h1>
-      </header>
-
-      <main className="w-full">
-        <Card className="mb-6 shadow-md dark:bg-gray-850 max-w-md mx-auto">
-          <CardHeader>
-            <div className="flex items-center">
-              <PencilLine className="h-5 w-5 mr-2" />
-              <CardTitle className="text-xl">Enter URL and Instructions</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="url-input">Website URL</Label>
-              <Input
-                id="url-input"
-                type="url"
-                placeholder="https://example.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="prompt-input">Extraction Prompt</Label>
-              <Textarea
-                id="prompt-input"
-                placeholder="e.g., Extract all product names and prices."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            <Button onClick={handleSubmit} disabled={!url} className="w-full">
-              Add Scrape Job
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Container for displaying scrape job cards - switched to Flexbox */}
-        <div className="w-full  flex flex-wrap justify-center"> {/* Use flex, wrap, and center. Adjusted padding */}
-          {jobs.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 dark:text-gray-400 py-10">
-              No scrape jobs added yet. Add one using the form above.
-            </div>
-          )}
-          {jobs.map((job) => (
-            // Placeholder for the ScrapeJobCard component
-            // Added width classes and padding to simulate grid columns/gap
-            <div key={job.id} className="w-full md:w-1/2 lg:w-1/3 p-2"> 
-              <Card className="dark:bg-gray-850 shadow-md flex flex-col h-full"> {/* Ensure card fills the div height */}
-                <CardHeader>
-                  <div className="flex items-center"> {/* Flex container for icon + title */}
-                    <FileText className="h-4 w-4 mr-2" />
-                    <CardTitle className="text-sm truncate">Job: {job.id.substring(0, 8)}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow min-h-[180px] flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs truncate mb-1">URL: {job.url}</p>
-                    <p className="text-xs truncate mb-2">Prompt: {job.prompt || '-'}</p>
-                  </div>
-                  <div className="mt-2">
-                    {job.status === 'loading' && (
-                      <div className="flex items-center text-xs text-yellow-500">
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Loading...
-                      </div>
-                    )}
-                    {job.status === 'completed' && (
-                      <div className="flex items-center text-xs text-green-500">
-                        <CheckCircle className="h-4 w-4 mr-1" /> Completed
-                      </div>
-                    )}
-                    {job.status === 'error' && (
-                      <div className="flex items-center text-xs text-red-500">
-                        <AlertTriangle className="h-4 w-4 mr-1" /> Error
-                      </div>
-                    )}
-                  </div>
-                  {/* TODO: Display actual results here */} 
-                </CardContent>
-              </Card>
-            </div>
+    <div style={{ padding: '20px' }}>
+      <h1>Scraper Jobs Dashboard</h1>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+        <thead>
+          <tr>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>ID</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Name</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Status</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Last Run</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mockScraperJobs.map((job) => (
+            <tr key={job.id}>
+              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{job.id}</td>
+              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{job.name}</td>
+              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{job.status}</td>
+              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{job.lastRun}</td>
+            </tr>
           ))}
-        </div>
-      </main>
-
-      <footer className="w-full max-w-4xl mt-8 pt-4 text-center text-xs text-gray-500 dark:text-gray-400 border-t border-gray-300 dark:border-gray-700">
-        © {new Date().getFullYear()} Scrape Wise - Simple Web Scraping
-      </footer>
+        </tbody>
+      </table>
     </div>
-  )
-}
+  );
+};
+
+export default Dashboard;

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // For navigation after login
+import { useNavigate, Link } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { loginUser } from '@/services'; // Import the service function
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -21,20 +22,12 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/auth', { // Updated URL
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const { token } = await loginUser(email, password); // Use the service function
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message || 'Login failed');
-      }
+      // Save the token in cookies
+      document.cookie = `token=${token}; path=/; secure; samesite=strict`;
 
-      const { token } = await response.json();
-      localStorage.setItem('token', token); // Store token securely
-      navigate('/dashboard'); // Redirect to the dashboard
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally {
