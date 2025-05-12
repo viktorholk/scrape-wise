@@ -6,7 +6,6 @@ import { authMiddleware } from "@/middlewares/auth";
 const router = Router();
 
 router.get('/', authMiddleware, requestHandler(async (req: Request, res: Response): Promise<void> => {
-
     const userId = req.userId!;
 
     const jobs = await prisma.crawlerJob.findMany({

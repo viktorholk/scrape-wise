@@ -59,6 +59,8 @@ export async function crawl(
       const title = await page.title();
       const textContent = await page.evaluate(() => document.body?.innerText || "");
 
+      console.log(`count: ${scrapedData.length} depth: ${currentDepth} url: ${url} title: ${title}`);
+
       let linksFoundOnPageCount = 0;
       if (currentDepth < depth) {
         const hrefs = await page.evaluate(() => {
