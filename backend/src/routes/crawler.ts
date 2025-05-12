@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { crawl } from "@/lib/crawler";
+import { crawl, CrawlerProps } from "@/lib/crawler";
 import { Router } from "express";
 import { BadRequestError } from "@/lib/errors";
 import { requestHandler } from "@/lib/utils";
@@ -7,18 +7,14 @@ import { prisma, CrawlerJobStatus } from "@/lib/database";
 import { authMiddleware } from "@/middlewares/auth";
 const router = Router();
 
-async function executeCrawlAndUpdateJob(
-  jobId: number,
-  url: string,
-  depth?: number,
-  limit?: number
-) {
+async function executeCrawlAndUpdateJob({ userId, jobId, url, settings }: CrawlerProps) {
   try {
     console.log(`Starting crawl for job ID: ${jobId}, URL: ${url}`);
     const crawlResults = await crawl({
+      userId,
+      jobId,
       url,
-      depth: depth === undefined ? 3 : depth,
-      limit: limit === undefined ? 10 : limit
+      settings
     });
 
     await prisma.crawlerJob.update({
@@ -65,7 +61,7 @@ router.post('/', authMiddleware, requestHandler(async (req: Request, res: Respon
     jobId: newJob.id
   });
 
-  executeCrawlAndUpdateJob(newJob.id, url, depth, limit);
+  executeCrawlAndUpdateJob({ userId, jobId: newJob.id, url, settings: { depth: depth ?? 3, limit: limit ?? 10 } });
 
 }));
 

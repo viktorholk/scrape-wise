@@ -1,9 +1,14 @@
 import { chromium, Browser, Page } from "playwright";
+import { sendWsMessageToUser } from "./websocket";
 
 export interface CrawlerProps {
   url: string;
-  depth: number;
-  limit: number;
+  userId: number;
+  jobId: number; 
+  settings: {
+    depth: number;
+    limit: number;
+  }
 }
 
 interface ScrapedPageData {
@@ -15,10 +20,15 @@ interface ScrapedPageData {
 }
 
 export async function crawl(
-  { url: initialUrlString, depth = 3, limit = 10 }: CrawlerProps,
+  { userId, jobId, url: initialUrlString, settings }: CrawlerProps,
 ): Promise<ScrapedPageData[]> {
   let initialUrlObj;
   try {
+
+    if (!initialUrlString.startsWith('http://') && !initialUrlString.startsWith('https://')) {
+      initialUrlString = `https://${initialUrlString}`;
+    }
+
     initialUrlObj = new URL(initialUrlString);
   } catch (e: any) {
     console.error(`Invalid initial URL: ${initialUrlString} - ${e.message}`);
@@ -39,13 +49,18 @@ export async function crawl(
   const queue: { url: string; currentDepth: number }[] = [{ url: initialUrlString, currentDepth: 0 }];
   const scrapedData: ScrapedPageData[] = [];
 
-  while (queue.length > 0 && scrapedData.length < limit) {
+  sendWsMessageToUser(userId, {
+    type: "crawler_started",
+    jobId
+  });
+
+  while (queue.length > 0 && scrapedData.length < settings.limit) {
     const current = queue.shift();
     if (!current) continue;
 
     const { url, currentDepth } = current;
 
-    if (visitedUrls.has(url) || currentDepth > depth) {
+    if (visitedUrls.has(url) || currentDepth > settings.depth) {
       continue;
     }
 
@@ -53,6 +68,15 @@ export async function crawl(
     let page: Page | null = null;
 
     try {
+      sendWsMessageToUser(userId, {
+        type: "crawler_job_progress",
+        jobId,
+        data: {
+          url,
+          currentDepth
+        }
+      });
+
       page = await context.newPage();
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
 
@@ -62,7 +86,7 @@ export async function crawl(
       console.log(`count: ${scrapedData.length} depth: ${currentDepth} url: ${url} title: ${title}`);
 
       let linksFoundOnPageCount = 0;
-      if (currentDepth < depth) {
+      if (currentDepth < settings.depth) {
         const hrefs = await page.evaluate(() => {
           return Array.from(document.querySelectorAll("a[href]")).map(a => (a as HTMLAnchorElement).href);
         });
@@ -89,12 +113,26 @@ export async function crawl(
     } catch (error: any) {
       console.error(`Failed to process ${url}: ${error.message}`);
       scrapedData.push({ url, title: "", textContent: null, linksFound: 0, error: error.message });
+
+      sendWsMessageToUser(userId, {
+        type: "crawler_job_progress_error",
+        jobId,
+        data: {
+          url,
+          error: error.message
+        }
+      });
     } finally {
       if (page) {
         await page.close();
       }
     }
   }
+
+  sendWsMessageToUser(userId, {
+    type: "crawler_job_finished",
+    jobId,
+  });
 
   await browser.close();
   return scrapedData;

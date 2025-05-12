@@ -6,8 +6,8 @@ if (!secret) {
   throw new Error("JWT_SECRET is not set");
 }
 
-export interface Token extends JwtPayload {
-  userId: string;
+export interface UserTokenPayload extends JwtPayload {
+  userId: number;
 }
 
 export function signToken(data: object): string {

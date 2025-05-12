@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Token, verifyToken } from "@/lib/utils/jwt";
+import { UserTokenPayload, verifyToken } from "@/lib/utils/jwt";
 import { AuthenticationError } from "@/lib/errors";
 import { requestHandler } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ export const authMiddleware = requestHandler(
       throw new AuthenticationError("No token provided");
     }
 
-    const decoded = verifyToken(token) as Token;
+    const decoded = verifyToken(token) as UserTokenPayload;
 
     if (!decoded) {
       throw new AuthenticationError("Invalid token");
