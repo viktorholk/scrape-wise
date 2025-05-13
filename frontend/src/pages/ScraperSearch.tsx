@@ -17,8 +17,8 @@ interface ScrapeJob {
 }
 
 export default function ScraperSearch() {
-  const [url, setUrl] = useState('');
-  const [prompt, setPrompt] = useState('');
+  const [url, setUrl] = useState('https://www.scrapethissite.com/pages/simple/');
+  const [prompt, setPrompt] = useState('Extract all countries');
   const [jobs, setJobs] = useState<ScrapeJob[]>([]);
 
   const updateJobStatus = useCallback((id: string, status: ScrapeJob['status'], data?: any) => {

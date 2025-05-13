@@ -8,6 +8,26 @@ import ScraperSearch from './pages/ScraperSearch';
 import Settings from './pages/Settings';
 
 function App() {
+
+  const ws = new WebSocket('ws://localhost:3001?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjYsImlhdCI6MTc0NzA1NzA5MywiZXhwIjoxNzQ3MTQzNDkzfQ.NFzmoU0cidM5LC_TwbRtWSKZgCAhZjvVe4ysLv6tD4c');
+
+  ws.onopen = () => {
+    console.log('Connected to server');
+  };
+
+  ws.onclose = () => {
+    console.log('Disconnected from server');
+  };
+
+  ws.onerror = (event) => {
+    console.error(event);
+  };
+
+  ws.onmessage = (event) => {
+    console.log(event.data);
+  };
+
+
   return (
     <Router>
       <Routes>
