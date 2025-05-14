@@ -45,5 +45,6 @@ model CrawlerJob {
 enum CrawlerJobStatus {
   STARTED
   COMPLETED
+  STOPPED
   ERROR
 }

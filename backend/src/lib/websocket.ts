@@ -1,8 +1,7 @@
 import WebSocket from 'ws';
 import { IncomingMessage, Server, ServerResponse } from 'http';
 import { UserTokenPayload, verifyToken } from "./utils/jwt";
-
-
+import { eventEmitter } from "./crawler";
 
 let wss: WebSocket.Server | undefined = undefined;
 
@@ -38,6 +37,16 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
 
     ws.on('message', (message) => {
       console.log(`Received from ${(ws as any).userId}: ${message}`); 
+      try {
+        const data = JSON.parse(message.toString());
+
+        if (data.type === 'crawler_job_stop') {
+          console.log(`Received from ${(ws as any).userId}: ${message}`); 
+          eventEmitter.emit(`${data.jobId}_crawler_job_stop`, data.jobId);
+        }
+      } catch (error) {
+        console.error(`Error parsing message: ${error}`);
+      }
     });
 
     ws.on('error', (error) => { 

@@ -1,6 +1,16 @@
 import { chromium, Browser, Page } from "playwright";
 import { sendWsMessageToUser } from "./websocket";
 
+import { EventEmitter } from 'events';
+import { CrawlerJobStatus } from "./database";
+import { prisma } from "./database";
+
+export const eventEmitter = new EventEmitter();
+
+function normalizeHostname(hostname: string): string {
+  return hostname.startsWith('www.') ? hostname.substring(4) : hostname;
+}
+
 export interface CrawlerProps {
   url: string;
   userId: number;
@@ -19,9 +29,17 @@ interface ScrapedPageData {
   error?: string;
 }
 
+
+interface CrawlResult {
+  url: string;
+  results: ScrapedPageData[];
+  status: CrawlerJobStatus;
+  error?: string;
+}
+
 export async function crawl(
   { userId, jobId, url: initialUrlString, settings }: CrawlerProps,
-): Promise<ScrapedPageData[]> {
+): Promise<CrawlResult> {
   let initialUrlObj;
   try {
 
@@ -32,9 +50,17 @@ export async function crawl(
     initialUrlObj = new URL(initialUrlString);
   } catch (e: any) {
     console.error(`Invalid initial URL: ${initialUrlString} - ${e.message}`);
-    return [{ url: initialUrlString, title: "", textContent: null, linksFound: 0, error: `Invalid initial URL: ${e.message}` }];
+    return { url: initialUrlString, results: [], status: CrawlerJobStatus.ERROR, error: `Invalid initial URL: ${e.message}` };
   }
-  const allowedHostname = initialUrlObj.hostname;
+  const hostname= normalizeHostname(initialUrlObj.hostname);
+
+  let stopFlag = false;
+
+  // Listen to events
+  eventEmitter.on(`${jobId}_crawler_job_stop`, (jobId: number) => {
+    console.log(`Job ${jobId} stopped`); 
+    stopFlag = true;
+  });
 
   const browser: Browser = await chromium.launch();
   const context = await browser.newContext({});
@@ -55,6 +81,13 @@ export async function crawl(
   });
 
   while (queue.length > 0 && scrapedData.length < settings.limit) {
+
+    if (stopFlag) {
+      console.log(`Job ${jobId} stopped`); 
+
+      return { url: initialUrlString, results: scrapedData, status: CrawlerJobStatus.STOPPED };
+    }
+
     const current = queue.shift();
     if (!current) continue;
 
@@ -96,7 +129,7 @@ export async function crawl(
             const absoluteUrl = new URL(href, url).toString();
             const newUrlObj = new URL(absoluteUrl);
 
-            if (newUrlObj.hostname === allowedHostname && 
+            if (normalizeHostname(newUrlObj.hostname) === hostname && 
                 (absoluteUrl.startsWith("http://") || absoluteUrl.startsWith("https://")) &&
                 !visitedUrls.has(absoluteUrl) &&
                 !queue.some(qItem => qItem.url === absoluteUrl)) {
@@ -135,7 +168,7 @@ export async function crawl(
   });
 
   await browser.close();
-  return scrapedData;
+  return { url: initialUrlString, results: scrapedData, status: CrawlerJobStatus.COMPLETED };
 }
 
 

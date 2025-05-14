@@ -10,7 +10,7 @@ const router = Router();
 async function executeCrawlAndUpdateJob({ userId, jobId, url, settings }: CrawlerProps) {
   try {
     console.log(`Starting crawl for job ID: ${jobId}, URL: ${url}`);
-    const crawlResults = await crawl({
+    const result = await crawl({
       userId,
       jobId,
       url,
@@ -20,8 +20,8 @@ async function executeCrawlAndUpdateJob({ userId, jobId, url, settings }: Crawle
     await prisma.crawlerJob.update({
       where: { id: jobId },
       data: {
-        results: crawlResults as any,
-        status: CrawlerJobStatus.COMPLETED,
+        results: result.results as any,
+        status: result.status,
       },
     });
     console.log(`Crawl job ID: ${jobId} completed successfully.`);
@@ -49,8 +49,8 @@ router.post('/', authMiddleware, requestHandler(async (req: Request, res: Respon
     data: {
       userId: userId,
       initialUrl: url,
-      crawlDepth: depth === undefined ? 3 : depth,
-      pageLimit: limit === undefined ? 10 : limit,
+      crawlDepth: depth === undefined ? 30 : depth,
+      pageLimit: limit === undefined ? 100 : limit,
       status: CrawlerJobStatus.STARTED,
     },
   });
