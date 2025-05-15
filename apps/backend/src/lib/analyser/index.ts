@@ -3,13 +3,12 @@ import { ScrapedPageData } from "../crawler";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod.mjs";
 import { relevanceInstructions } from "./instructions";
-import { analyseInstructions, createPageAnalysisPrompt } from "./instructions";
-
+import { analyseInstructions, createPageAnalysisPrompt, createRelevanceCheckPrompt } from "./instructions";
 
 const relevanceOutputSchema = z.object({
     pages: z.array(z.object({
         url: z.string(),
-        content: z.string(),
+        reason: z.string(),
     })),
 });
 
@@ -33,26 +32,23 @@ const analyseOutputSchema = z.object({
     ),
 });
 
-export type OpenAIAnalysisResult = z.infer<typeof analyseOutputSchema> & { pageUrl: string };
+export type OpenAIAnalysisResult = z.infer<typeof analyseOutputSchema>;
 
-export async function analyseResults(userExtractionRequest: string, results: ScrapedPageData[]) {
+export async function analyseResults(userExtractionRequest: string, results: ScrapedPageData[]): Promise<OpenAIAnalysisResult> {
     const client = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
     });
 
+    if (!results || results.length === 0) {
+        console.log("No pages provided for analysis.");
+        return {
+            extracted_data: [],
+            presentation_suggestions: [],
+        };
+    }
+
     console.log("Sending relevance prompt to OpenAI");
-
-
-    console.log(JSON.stringify([            {
-        role: "developer",
-        content: relevanceInstructions
-    },
-    {
-        role: "user",
-        content: createPageAnalysisPrompt(userExtractionRequest, results)
-    }], null, 2));
-
-
+    const relevanceUserContent = createRelevanceCheckPrompt(userExtractionRequest, results);
     const relevanceResponse = await client.responses.create({
         model: "gpt-4o-mini",
         input: [
@@ -62,7 +58,7 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
             },
             {
                 role: "user",
-                content: createPageAnalysisPrompt(userExtractionRequest, results)
+                content: relevanceUserContent
             }
         ],
         text: {
@@ -70,34 +66,49 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
         }
     });
 
-    const relevanceOutput = relevanceResponse.output_text;
+    const relevanceOutputText = relevanceResponse.output_text;
 
-    if (!relevanceOutput) {
+    if (!relevanceOutputText) {
         throw new Error("No relevance output received from OpenAI");
     }
 
+    let relevantPagesFromAI: { url: string, reason: string }[];
     try {
-        const relevanceOutputData = JSON.parse(relevanceOutput);
-        console.log(JSON.stringify(relevanceOutputData, null, 2));
+        const parsedRelevanceOutput = JSON.parse(relevanceOutputText);
+        relevantPagesFromAI = relevanceOutputSchema.parse(parsedRelevanceOutput).pages;
+        console.log("Relevant pages determined by AI:", JSON.stringify(relevantPagesFromAI, null, 2));
     } catch (error) {
+        console.error("Error parsing relevance output:", error);
         throw new Error("Invalid relevance output received from OpenAI");
     }
 
-    const analysisPrompt = createPageAnalysisPrompt(userExtractionRequest, results);
-    console.log("Sending prompt to OpenAI");
+    if (!relevantPagesFromAI || relevantPagesFromAI.length === 0) {
+        console.log("No relevant pages found by AI.");
+        return {
+            extracted_data: [],
+            presentation_suggestions: [],
+        };
+    }
 
-    console.log(JSON.stringify([
-        {
-            role: "developer",
-            content: analyseInstructions
-        },
-        {
-            role: "user",
-            content: analysisPrompt
-        }
-    ], null, 2));
+    // Filter the original ScrapedPageData results to get full data for relevant URLs
+    const relevantPageURLs = new Set(relevantPagesFromAI.map(p => p.url));
+    const pagesForAnalysis: ScrapedPageData[] = results.filter(p => relevantPageURLs.has(p.url));
 
-    const response = await client.responses.create({
+    if (pagesForAnalysis.length === 0) {
+        console.log("No matching pages found in original results for analysis, though AI found some relevant URLs. This might indicate an issue.");
+        return {
+            extracted_data: [],
+            presentation_suggestions: [],
+        };
+    }
+
+    console.log(`Proceeding to main analysis with ${pagesForAnalysis.length} relevant page(s).`);
+
+    // Create the prompt for the main analysis using the content of all relevant pages
+    const analysisPrompt = createPageAnalysisPrompt(userExtractionRequest, pagesForAnalysis);
+    console.log("Sending main analysis prompt to OpenAI");
+
+    const analysisApiResponse = await client.responses.create({
         model: "gpt-4o-mini",
         input: [
             {
@@ -109,24 +120,25 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
                 content: analysisPrompt
             }
         ],
-
         text: {
             format: zodTextFormat(analyseOutputSchema, "output")
         }
-
     });
 
-    const content = response.output_text;
+    const analysisOutputText = analysisApiResponse.output_text;
 
-    if (!content) {
-        throw new Error("No content received from OpenAI");
+    if (!analysisOutputText) {
+        throw new Error("No content received from OpenAI for main analysis");
     }
 
     try {
-        const output = JSON.parse(content);
-        console.log(JSON.stringify(output, null, 2));
-        return output;
+        const parsedAnalysisOutput = JSON.parse(analysisOutputText);
+        const validatedAnalysisOutput = analyseOutputSchema.parse(parsedAnalysisOutput);
+        console.log("Main analysis output:", JSON.stringify(validatedAnalysisOutput, null, 2));
+
+        return validatedAnalysisOutput;
     } catch (error) {
-        throw new Error("Invalid JSON received from OpenAI");
+        console.error("Error parsing main analysis output:", error);
+        throw new Error("Invalid JSON received from OpenAI for main analysis");
     }
 }

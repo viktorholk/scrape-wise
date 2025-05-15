@@ -23,11 +23,11 @@ The value of "pages" MUST be an array.
 Each element in the "pages" array MUST be an object representing a RELEVANT webpage.
 Each of these page objects MUST have exactly two keys:
 1.  "url": A string containing the URL of the relevant webpage.
-2.  "content": A string containing the full text content of that relevant webpage.
+2.  "reason": A brief string (1 sentence) explaining WHY this page is relevant and likely to contain the requested data. Do NOT return the page content itself.
 
 If NO pages are deemed relevant, return an empty array for "pages": \`{ "pages": [] }\`.
 Do NOT include any pages in the output array that you deem irrelevant or unlikely to contain the requested data.
-Do NOT include any explanations or justifications in the output JSON. Your selection of pages is the output.
+Do NOT include the page content in the output JSON. Your selection of pages and the reason for relevance is the output.
 
 Example output if two pages are relevant:
 \`\`\`json
@@ -35,11 +35,11 @@ Example output if two pages are relevant:
   "pages": [
     {
       "url": "http://example.com/relevant-page-1",
-      "content": "Full text content of relevant page 1..."
+      "reason": "This page contains a table listing product names and prices, matching the user request."
     },
     {
       "url": "http://example.com/relevant-page-2",
-      "content": "Full text content of relevant page 2..."
+      "reason": "The page directly mentions the company's founding date and key personnel as requested."
     }
   ]
 }
