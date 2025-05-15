@@ -47,3 +47,22 @@ enum CrawlerJobStatus {
   STOPPED
   ERROR
 }
+
+model Recipe {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String?
+  rating          Float?
+  categories      String[]
+  prepTimeMinutes Int?
+  cookTimeMinutes Int?
+  servings        Int?
+  ingredients     Json // Store as { "name": "flour", "quantity": 2, "unit": "cups" }
+  instructions    String[]
+  imageUrl        String?
+  sourceUrl       String?
+  notes           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

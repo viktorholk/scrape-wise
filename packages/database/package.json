@@ -5,14 +5,16 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --skip-generate",
     "db:deploy": "prisma migrate deploy",
-    "format": "prisma format"
+    "format": "prisma format",
+    "seed": "npx tsx ./scripts/createRecipes.ts"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
+    "@types/node": "^22.15.18",
     "@types/ws": "^8.18.1",
-    "prisma":"^6.6.0"
+    "prisma": "^6.6.0"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.8.0",
     "@prisma/client": "^6.6.0",
     "dotenv": "^16.5.0",
     "ws": "^8.18.1"
