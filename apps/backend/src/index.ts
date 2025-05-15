@@ -2,8 +2,6 @@ import express, { Application, Request } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
-import WebSocket from 'ws';
-
 import { createServer } from 'http';
 dotenv.config();
 

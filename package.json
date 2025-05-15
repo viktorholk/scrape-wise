@@ -1,0 +1,20 @@
+{
+    "name": "scrape-wise",
+    "private": true,
+    "workspaces": [
+      "apps/*",
+      "packages/*"
+    ],
+    "scripts": {
+      "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    },
+    "devDependencies": {
+      "prettier": "^3.5.3",
+      "typescript": "5.8.2"
+    },
+    "packageManager": "pnpm@9.0.0",
+    "engines": {
+      "node": "22.14"
+    }
+  }
+  

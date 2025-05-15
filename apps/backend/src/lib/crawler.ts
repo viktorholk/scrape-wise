@@ -2,8 +2,48 @@ import { chromium, Browser, Page } from "playwright";
 import { sendWsMessageToUser } from "./websocket";
 
 import { EventEmitter } from 'events';
-import { CrawlerJobStatus } from "./database";
-import { prisma } from "./database";
+import { CrawlerJobStatus, prisma } from "@packages/database";
+import { analyseResults } from "@/lib/analyser";
+
+export async function executeCrawlAndUpdateJob({ userId, jobId, url, prompt, settings }: CrawlerProps) {
+  try {
+    console.log(`Starting crawl for job ID: ${jobId}, URL: ${url}`);
+    const result = await crawl({
+      userId,
+      jobId,
+      url,
+      prompt,
+      settings
+    });
+
+    await prisma.crawlerJob.update({
+      where: { id: jobId },
+      data: {
+        results: result.results as any,
+        status: result.status,
+      },
+    });
+    console.log(`Crawl job ID: ${jobId} completed successfully.`);
+
+
+    if (result.results.length > 0) {
+      const analysis = await analyseResults(prompt, result.results);
+      console.log(JSON.stringify(analysis, null, 2));
+    }
+
+  } catch (error: any) {
+    console.error(`Error during crawl for job ID: ${jobId}:`, error);
+    await prisma.crawlerJob.update({
+      where: { id: jobId },
+      data: {
+        status: CrawlerJobStatus.ERROR,
+        results: { error: error.message, details: error.stack } as any,
+      },
+    });
+  }
+}
+
+
 
 export const eventEmitter = new EventEmitter();
 
@@ -14,14 +54,15 @@ function normalizeHostname(hostname: string): string {
 export interface CrawlerProps {
   url: string;
   userId: number;
-  jobId: number; 
+  jobId: number;
+  prompt: string;
   settings: {
     depth: number;
     limit: number;
   }
 }
 
-interface ScrapedPageData {
+export interface ScrapedPageData {
   url: string;
   title: string;
   textContent: string | null;

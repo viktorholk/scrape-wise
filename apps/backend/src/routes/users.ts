@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/database";
+import { prisma } from "@packages/database";
 import { BadRequestError, Conflict } from "@/lib/errors";
 import { requestHandler } from "@/lib/utils";
 import { Router, Request, Response } from "express";

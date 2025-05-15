@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/database";
+import { prisma } from "@packages/database";
 import { requestHandler } from "@/lib/utils";
 import { Router, Request, Response } from "express";
 import { authMiddleware } from "@/middlewares/auth";
