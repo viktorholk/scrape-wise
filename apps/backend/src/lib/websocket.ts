@@ -28,7 +28,6 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
       return;
     }
 
-
     (ws as any).userId = user.userId;
 
     console.log(`Client connected with userId: ${user.userId}`);
@@ -70,21 +69,38 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
 }
 
 
+const validWsMessageTypes = [
+  "crawler_started",
+  "crawler_job_progress",
+  "crawler_job_progress_error",
+  "crawler_job_finished",
+  "analyser_job_relevance_started",
+  "analyser_job_relevance_finished",
+  "analyser_job_analysis_started",
+  "analyser_job_analysis_finished",
+];
+
+
 interface WsMessagePayload {
-  type: "crawler_started" | "crawler_job_progress" | "crawler_job_progress_error" | "crawler_job_finished";
+  type: (typeof validWsMessageTypes)[number];
   jobId: number;
-  data?: object;
+  data?: object | Array<object>;
 }
-export function sendWsMessageToUser(userId: number, message: WsMessagePayload) { 
+export function sendWsMessageToUser(userId: number, message: WsMessagePayload): Promise<void> { 
+
+  return new Promise((resolve, _) => {
     const ws = activeConnections.get(userId);
     if (ws && ws.readyState === WebSocket.OPEN) {
       const messageString = JSON.stringify(message);
       ws.send(messageString);
+      resolve();
     } else {
       if(!ws) console.log(`No active WS connection found for user ${userId}.`);
       else if(ws.readyState !== WebSocket.OPEN) console.log(`WS connection for user ${userId} is not OPEN (state: ${ws.readyState}).`);
+      resolve();
     }
-  }
+  });
+}
 
 function getUser(req: IncomingMessage): UserTokenPayload | null {
   const urlParams = new URLSearchParams(req.url?.split('?')[1] || '');

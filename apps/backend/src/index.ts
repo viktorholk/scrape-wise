@@ -12,7 +12,7 @@ const app: Application = express();
 const server = createServer(app);
 initWebSocket(server);
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3010;
 
 app.use(cors());
 app.use(express.json());
@@ -22,5 +22,3 @@ app.use('/', routes);
 server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
-export default app;

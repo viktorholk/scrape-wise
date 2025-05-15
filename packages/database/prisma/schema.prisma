@@ -13,6 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum JobStatus {
+  STARTED
+  COMPLETED
+  STOPPED
+  ERROR
+}
+
 model User {
   id        Int     @id @default(autoincrement())
   email     String  @unique
@@ -23,7 +30,8 @@ model User {
 
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
-  CrawlerJob CrawlerJob[]
+  crawlerJobs CrawlerJob[]
+  analyserJobs AnalyserJob[] 
 }
 
 model CrawlerJob {
@@ -33,19 +41,31 @@ model CrawlerJob {
   initialUrl String
   crawlDepth Int
   pageLimit  Int
-  status     CrawlerJobStatus @default(STARTED)
+  status     JobStatus @default(STARTED)
+  pages Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  analyserJobs AnalyserJob[]
+
+  @@index([userId])
+}
+
+model AnalyserJob {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  user       User             @relation(fields: [userId], references: [id])
+  crawlerJobId     Int
+  crawlerJob       CrawlerJob @relation(fields: [crawlerJobId], references: [id]) 
+
+  prompt String
+
+  status     JobStatus @default(STARTED)
   results    Json?
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
   @@index([userId])
-}
-
-enum CrawlerJobStatus {
-  STARTED
-  COMPLETED
-  STOPPED
-  ERROR
 }
 
 model Recipe {
@@ -59,8 +79,6 @@ model Recipe {
   servings        Int?
   ingredients     Json // Store as { "name": "flour", "quantity": 2, "unit": "cups" }
   instructions    String[]
-  imageUrl        String?
-  sourceUrl       String?
   notes           String?
 
   createdAt DateTime @default(now())

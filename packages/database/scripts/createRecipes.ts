@@ -46,7 +46,6 @@ async function main() {
       servings: faker.number.int({ min: 1, max: 10 }),
       ingredients: recipeIngredients as unknown as Prisma.JsonArray,
       instructions: { set: recipeInstructions },
-      imageUrl: faker.image.urlLoremFlickr({ category: 'food' }),
       notes: i % 3 === 0 ? faker.lorem.sentence() : null,
     };
     recipesToCreateData.push(recipeData);

@@ -1,9 +1,12 @@
-import openai, { OpenAI } from "openai";
-import { ScrapedPageData } from "../crawler";
+import { OpenAI } from "openai";
+import { ScrapedPageData } from "@/types";
 import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod.mjs";
 import { relevanceInstructions } from "./instructions";
 import { analyseInstructions, createPageAnalysisPrompt, createRelevanceCheckPrompt } from "./instructions";
+import { AnalyserJob, JobStatus } from "@packages/database";
+import { prisma } from "@packages/database";
+import { sendWsMessageToUser } from "../websocket";
 
 const relevanceOutputSchema = z.object({
     pages: z.array(z.object({
@@ -32,9 +35,54 @@ const analyseOutputSchema = z.object({
     ),
 });
 
-export type OpenAIAnalysisResult = z.infer<typeof analyseOutputSchema>;
+export type AnalysisResult = z.infer<typeof analyseOutputSchema>;
 
-export async function analyseResults(userExtractionRequest: string, results: ScrapedPageData[]): Promise<OpenAIAnalysisResult> {
+export async function createAnalyseJob(userId: number, crawlerJobId: number, prompt: string): Promise<AnalyserJob> {
+    if (!prompt) {
+        throw new Error("Prompt is required");
+    }
+
+    const crawlerJob = await prisma.crawlerJob.findUnique({
+        where: {
+            id: crawlerJobId,
+        },
+    });
+
+    if (!crawlerJob) {
+        throw new Error("Crawler job not found");
+    }
+
+    if (crawlerJob.status !== JobStatus.COMPLETED) {
+        throw new Error("Crawler job is not completed");
+    }
+
+    const pages = crawlerJob.pages as unknown as ScrapedPageData[];
+
+    const job = await prisma.analyserJob.create({
+        data: {
+            userId,
+            crawlerJobId,
+            prompt,
+            status: JobStatus.STARTED,
+        }
+    });
+
+    const result = await analyseResults(userId, job.id, prompt, pages);
+  
+    const updatedJob = await prisma.analyserJob.update({
+      where: { id: job.id },
+      data: {
+        status: JobStatus.COMPLETED,
+        results: result,
+      }
+    });
+  
+    return updatedJob;
+  }
+  
+
+
+export async function analyseResults(userId: number, jobId: number, prompt: string, results: ScrapedPageData[]): Promise<AnalysisResult> {
     const client = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
     });
@@ -47,8 +95,13 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
         };
     }
 
+    await sendWsMessageToUser(userId, {
+        type: "analyser_job_relevance_started",
+        jobId
+    });
+
     console.log("Sending relevance prompt to OpenAI");
-    const relevanceUserContent = createRelevanceCheckPrompt(userExtractionRequest, results);
+    const relevanceUserContent = createRelevanceCheckPrompt(prompt, results);
     const relevanceResponse = await client.responses.create({
         model: "gpt-4o-mini",
         input: [
@@ -90,6 +143,12 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
         };
     }
 
+    await sendWsMessageToUser(userId, {
+        type: "analyser_job_relevance_finished",
+        jobId,
+        data: relevantPagesFromAI
+    });
+
     // Filter the original ScrapedPageData results to get full data for relevant URLs
     const relevantPageURLs = new Set(relevantPagesFromAI.map(p => p.url));
     const pagesForAnalysis: ScrapedPageData[] = results.filter(p => relevantPageURLs.has(p.url));
@@ -105,9 +164,15 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
     console.log(`Proceeding to main analysis with ${pagesForAnalysis.length} relevant page(s).`);
 
     // Create the prompt for the main analysis using the content of all relevant pages
-    const analysisPrompt = createPageAnalysisPrompt(userExtractionRequest, pagesForAnalysis);
-    console.log("Sending main analysis prompt to OpenAI");
+    const analysisPrompt = createPageAnalysisPrompt(prompt, pagesForAnalysis);
 
+
+    await sendWsMessageToUser(userId, {
+        type: "analyser_job_analysis_started",
+        jobId,
+    });
+
+    console.log("Sending main analysis prompt to OpenAI");
     const analysisApiResponse = await client.responses.create({
         model: "gpt-4o-mini",
         input: [
@@ -134,8 +199,15 @@ export async function analyseResults(userExtractionRequest: string, results: Scr
     try {
         const parsedAnalysisOutput = JSON.parse(analysisOutputText);
         const validatedAnalysisOutput = analyseOutputSchema.parse(parsedAnalysisOutput);
-        console.log("Main analysis output:", JSON.stringify(validatedAnalysisOutput, null, 2));
 
+        await sendWsMessageToUser(userId, {
+            type: "analyser_job_analysis_finished",
+            jobId,
+            data: validatedAnalysisOutput
+        });
+    
+
+        console.log("Main analysis output:", JSON.stringify(validatedAnalysisOutput, null, 2));
         return validatedAnalysisOutput;
     } catch (error) {
         console.error("Error parsing main analysis output:", error);

@@ -19,7 +19,7 @@ router.get('/', authMiddleware, requestHandler(async (req: Request, res: Respons
             pageLimit: true,
             createdAt: true,
             status: true,
-            results: true,
+            pages: true,
         },
         orderBy: {
             createdAt: "desc"

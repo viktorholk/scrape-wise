@@ -2,48 +2,9 @@ import { chromium, Browser, Page } from "playwright";
 import { sendWsMessageToUser } from "./websocket";
 
 import { EventEmitter } from 'events';
-import { CrawlerJobStatus, prisma } from "@packages/database";
-import { analyseResults } from "@/lib/analyser";
+import { CrawlerJob, JobStatus, prisma } from "@packages/database";
 
-export async function executeCrawlAndUpdateJob({ userId, jobId, url, prompt, settings }: CrawlerProps) {
-  try {
-    console.log(`Starting crawl for job ID: ${jobId}, URL: ${url}`);
-    const result = await crawl({
-      userId,
-      jobId,
-      url,
-      prompt,
-      settings
-    });
-
-    await prisma.crawlerJob.update({
-      where: { id: jobId },
-      data: {
-        results: result.results as any,
-        status: result.status,
-      },
-    });
-    console.log(`Crawl job ID: ${jobId} completed successfully.`);
-
-
-    if (result.results.length > 0) {
-      const analysis = await analyseResults(prompt, result.results);
-      console.log(JSON.stringify(analysis, null, 2));
-    }
-
-  } catch (error: any) {
-    console.error(`Error during crawl for job ID: ${jobId}:`, error);
-    await prisma.crawlerJob.update({
-      where: { id: jobId },
-      data: {
-        status: CrawlerJobStatus.ERROR,
-        results: { error: error.message, details: error.stack } as any,
-      },
-    });
-  }
-}
-
-
+import { CrawlerSettings, CrawlResult, ScrapedPageData } from "@/types";
 
 export const eventEmitter = new EventEmitter();
 
@@ -51,35 +12,35 @@ function normalizeHostname(hostname: string): string {
   return hostname.startsWith('www.') ? hostname.substring(4) : hostname;
 }
 
-export interface CrawlerProps {
-  url: string;
-  userId: number;
-  jobId: number;
-  prompt: string;
-  settings: {
-    depth: number;
-    limit: number;
-  }
-}
+export async function createCrawlJob(userId: number, url: string, settings: CrawlerSettings): Promise<CrawlerJob> {
+  const job = await prisma.crawlerJob.create({
+    data: {
+      userId,
+      initialUrl: url,
+      crawlDepth: settings.depth,
+      pageLimit: settings.limit,
+      status: JobStatus.STARTED,
+    }
+  });
 
-export interface ScrapedPageData {
-  url: string;
-  title: string;
-  textContent: string | null;
-  linksFound: number;
-  error?: string;
-}
+  const result = await crawl(userId, job.id, url, settings);
 
+  const updatedJob = await prisma.crawlerJob.update({
+    where: { id: job.id },
+    data: {
+      status: result.status,
+      pages: result.pages as any,
+    }
+  });
 
-interface CrawlResult {
-  url: string;
-  results: ScrapedPageData[];
-  status: CrawlerJobStatus;
-  error?: string;
+  return updatedJob;
 }
 
 export async function crawl(
-  { userId, jobId, url: initialUrlString, settings }: CrawlerProps,
+  userId: number,
+  jobId: number,
+  initialUrlString: string,
+  settings: CrawlerSettings,
 ): Promise<CrawlResult> {
   let initialUrlObj;
   try {
@@ -91,7 +52,7 @@ export async function crawl(
     initialUrlObj = new URL(initialUrlString);
   } catch (e: any) {
     console.error(`Invalid initial URL: ${initialUrlString} - ${e.message}`);
-    return { url: initialUrlString, results: [], status: CrawlerJobStatus.ERROR, error: `Invalid initial URL: ${e.message}` };
+    return { url: initialUrlString, pages: [], status: JobStatus.ERROR, error: `Invalid initial URL: ${e.message}` };
   }
   const hostname= normalizeHostname(initialUrlObj.hostname);
 
@@ -116,8 +77,8 @@ export async function crawl(
   const queue: { url: string; currentDepth: number }[] = [{ url: initialUrlString, currentDepth: 0 }];
   const scrapedData: ScrapedPageData[] = [];
 
-  sendWsMessageToUser(userId, {
-    type: "crawler_started",
+  await sendWsMessageToUser(userId, {
+    type: "crawler_job_started",
     jobId
   });
 
@@ -126,7 +87,7 @@ export async function crawl(
     if (stopFlag) {
       console.log(`Job ${jobId} stopped`); 
 
-      return { url: initialUrlString, results: scrapedData, status: CrawlerJobStatus.STOPPED };
+      return { url: initialUrlString, pages: scrapedData, status: JobStatus.STOPPED };
     }
 
     const current = queue.shift();
@@ -142,7 +103,7 @@ export async function crawl(
     let page: Page | null = null;
 
     try {
-      sendWsMessageToUser(userId, {
+      await sendWsMessageToUser(userId, {
         type: "crawler_job_progress",
         jobId,
         data: {
@@ -188,7 +149,7 @@ export async function crawl(
       console.error(`Failed to process ${url}: ${error.message}`);
       scrapedData.push({ url, title: "", textContent: null, linksFound: 0, error: error.message });
 
-      sendWsMessageToUser(userId, {
+      await sendWsMessageToUser(userId, {
         type: "crawler_job_progress_error",
         jobId,
         data: {
@@ -203,13 +164,16 @@ export async function crawl(
     }
   }
 
-  sendWsMessageToUser(userId, {
+  await sendWsMessageToUser(userId, {
     type: "crawler_job_finished",
     jobId,
   });
 
+  // cleanup
   await browser.close();
-  return { url: initialUrlString, results: scrapedData, status: CrawlerJobStatus.COMPLETED };
+  eventEmitter.removeAllListeners(`${jobId}_crawler_job_stop`);
+
+  return { url: initialUrlString, pages: scrapedData, status: JobStatus.COMPLETED };
 }
 
 

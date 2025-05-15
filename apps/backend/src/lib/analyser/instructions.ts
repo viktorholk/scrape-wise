@@ -1,4 +1,4 @@
-import { ScrapedPageData } from "../crawler";
+import { ScrapedPageData } from "@/types";
 
 export const relevanceInstructions = `You are an AI assistant acting as a pre-filter for a data extraction process.
 Your task is to evaluate a collection of webpages and return ONLY those that are relevant to the user's data extraction request and likely to contain the specific data they are looking for.
@@ -99,9 +99,7 @@ Your process should be as follows:
     *   A clear \`template_type\`. Choose from the following standard types where appropriate: "TABLE", "BAR_CHART", "LINE_CHART", "PIE_CHART", "LIST_VIEW", "KEY_VALUE_PAIRS". If none of these strictly fit, you can use a custom descriptive name for the type.
     *   A concise \`description\` of the template, detailing how it would use the "fields".
         *   For "TABLE": Specify which "label"s from the fields would form the column headers and how rows are populated.
-        *   For chart types (e.g., "BAR_CHART"): Specify what data (from which field "label"s) should be used for categories/axes and values. Indicate if aggregation is needed.
-        *   For "LIST_VIEW": Describe how each item and its fields would be displayed in a list format.
-        *   For "KEY_VALUE_PAIRS": Describe how to display the fields of a single selected item.
+        *   For chart types ("BAR_CHART", "LINE_CHART"): Specify what data (from which field "label"s) should be used for categories/axes and values. Indicate if aggregation is needed.
     *   A brief \`suitability_reason\` explaining why this template is appropriate for the data.
 
 **Output Format:**
