@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScanSearch, Loader2, CheckCircle, AlertTriangle, PencilLine, FileText } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScanSearch, Loader2, CheckCircle, AlertTriangle, PencilLine, FileText, Download } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { addScrapeJob } from '@/services'; // Import the service function
+import { ws } from '@/App';
 
 interface ScrapeJob {
   id: string;
@@ -34,28 +35,24 @@ export default function ScraperSearch() {
   const handleSubmit = async () => {
     if (!url) return;
 
-    const newJobId = Date.now().toString() + Math.random().toString();
-    const newJob: ScrapeJob = {
-      id: newJobId,
-      url,
-      prompt,
-      status: 'loading',
-    };
-
-    console.log("Adding new job:", newJob);
-    setJobs(prevJobs => [newJob, ...prevJobs]);
-
-    setUrl('');
-    setPrompt('');
-
     try {
       const data = await addScrapeJob(url, prompt); // Use the service function
-      console.log(`Job ${newJobId} completed successfully.`, data);
-      updateJobStatus(newJobId, 'completed', data);
+
+
+      const newJob: ScrapeJob = {
+        id: data.jobId,
+        url,
+        prompt,
+        status: 'loading',
+      };
+
+    setJobs(prevJobs => [newJob, ...prevJobs]);
+
+      console.log(data)
+      console.log(`Job ${newJob.id} completed successfully.`, data);
+      updateJobStatus(newJob.id, 'completed', data);
     } catch (error) {
-      console.error(`Job ${newJobId} failed.`, error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to scrape the URL.';
-      updateJobStatus(newJobId, 'error', errorMessage);
     }
   };
 
@@ -120,7 +117,7 @@ export default function ScraperSearch() {
                 <CardHeader>
                   <div className="flex items-center"> {/* Flex container for icon + title */}
                     <FileText className="h-4 w-4 mr-2" />
-                    <CardTitle className="text-sm truncate">Job: {job.id.substring(0, 8)}</CardTitle>
+                    <CardTitle className="text-sm truncate">Job: {job.id}</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow min-h-[180px] flex flex-col justify-between">
@@ -147,6 +144,18 @@ export default function ScraperSearch() {
                   </div>
                   {/* TODO: Display actual results here */} 
                 </CardContent>
+
+                <CardFooter>
+                  <Button variant="outline" onClick={() => {
+                    console.log("Stopping job:", job.id);
+                    ws.send(JSON.stringify({
+                      type: 'crawler_job_stop',
+                      jobId: job.id
+                    }))
+                  }}>
+                    <Download className="h-4 w-4 mr-1" /> Stop
+                  </Button>
+                </CardFooter>
               </Card>
             </div>
           ))}
