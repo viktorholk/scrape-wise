@@ -1,16 +1,16 @@
 import { Navigate } from 'react-router-dom';
-import { getAuthToken } from '@/services'; // Import the helper function
+import { getAuthToken, isTokenExpired } from '@/services';
 
 interface ProtectedRouteProps {
   children: JSX.Element;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const token = getAuthToken(); // Use the helper function to get the token
+  const token = getAuthToken();
 
-  if (!token) {
-    return <Navigate to="/login" replace />; // Redirect to login if not authenticated
+  if (!token || isTokenExpired(token)) {
+    return <Navigate to="/login" replace />;
   }
 
-  return children; // Render the protected content if authenticated
+  return children;
 }
