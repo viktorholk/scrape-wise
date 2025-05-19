@@ -54,13 +54,13 @@ export async function crawl(
     console.error(`Invalid initial URL: ${initialUrlString} - ${e.message}`);
     return { url: initialUrlString, pages: [], status: JobStatus.ERROR, error: `Invalid initial URL: ${e.message}` };
   }
-  const hostname= normalizeHostname(initialUrlObj.hostname);
+  const hostname = normalizeHostname(initialUrlObj.hostname);
 
   let stopFlag = false;
 
   // Listen to events
   eventEmitter.on(`${jobId}_crawler_job_stop`, (jobId: number) => {
-    console.log(`Job ${jobId} stopped`); 
+    console.log(`Job ${jobId} stopped`);
     stopFlag = true;
   });
 
@@ -77,7 +77,7 @@ export async function crawl(
   const queue: { url: string; currentDepth: number }[] = [{ url: initialUrlString, currentDepth: 0 }];
   const scrapedData: ScrapedPageData[] = [];
 
-  await sendWsMessageToUser(userId, {
+  sendWsMessageToUser(userId, {
     type: "crawler_job_started",
     jobId
   });
@@ -85,13 +85,12 @@ export async function crawl(
   while (queue.length > 0 && scrapedData.length < settings.limit) {
 
     if (stopFlag) {
-      console.log(`Job ${jobId} stopped`); 
+      console.log(`Job ${jobId} stopped`);
 
       return { url: initialUrlString, pages: scrapedData, status: JobStatus.STOPPED };
     }
 
-    const current = queue.shift();
-    if (!current) continue;
+    const current = queue.shift()!;
 
     const { url, currentDepth } = current;
 
@@ -103,7 +102,7 @@ export async function crawl(
     let page: Page | null = null;
 
     try {
-      await sendWsMessageToUser(userId, {
+      sendWsMessageToUser(userId, {
         type: "crawler_job_progress",
         jobId,
         data: {
@@ -131,10 +130,10 @@ export async function crawl(
             const absoluteUrl = new URL(href, url).toString();
             const newUrlObj = new URL(absoluteUrl);
 
-            if (normalizeHostname(newUrlObj.hostname) === hostname && 
-                (absoluteUrl.startsWith("http://") || absoluteUrl.startsWith("https://")) &&
-                !visitedUrls.has(absoluteUrl) &&
-                !queue.some(qItem => qItem.url === absoluteUrl)) {
+            if (normalizeHostname(newUrlObj.hostname) === hostname &&
+              (absoluteUrl.startsWith("http://") || absoluteUrl.startsWith("https://")) &&
+              !visitedUrls.has(absoluteUrl) &&
+              !queue.some(qItem => qItem.url === absoluteUrl)) {
               linksFoundOnPageCount++;
               queue.push({ url: absoluteUrl, currentDepth: currentDepth + 1 });
             }
@@ -149,7 +148,7 @@ export async function crawl(
       console.error(`Failed to process ${url}: ${error.message}`);
       scrapedData.push({ url, title: "", textContent: null, linksFound: 0, error: error.message });
 
-      await sendWsMessageToUser(userId, {
+      sendWsMessageToUser(userId, {
         type: "crawler_job_progress_error",
         jobId,
         data: {
@@ -164,7 +163,7 @@ export async function crawl(
     }
   }
 
-  await sendWsMessageToUser(userId, {
+  sendWsMessageToUser(userId, {
     type: "crawler_job_finished",
     jobId,
   });

@@ -95,7 +95,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
         };
     }
 
-    await sendWsMessageToUser(userId, {
+    sendWsMessageToUser(userId, {
         type: "analyser_job_relevance_started",
         jobId
     });
@@ -143,7 +143,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
         };
     }
 
-    await sendWsMessageToUser(userId, {
+    sendWsMessageToUser(userId, {
         type: "analyser_job_relevance_finished",
         jobId,
         data: relevantPagesFromAI
@@ -167,7 +167,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
     const analysisPrompt = createPageAnalysisPrompt(prompt, pagesForAnalysis);
 
 
-    await sendWsMessageToUser(userId, {
+    sendWsMessageToUser(userId, {
         type: "analyser_job_analysis_started",
         jobId,
     });
@@ -200,7 +200,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
         const parsedAnalysisOutput = JSON.parse(analysisOutputText);
         const validatedAnalysisOutput = analyseOutputSchema.parse(parsedAnalysisOutput);
 
-        await sendWsMessageToUser(userId, {
+        sendWsMessageToUser(userId, {
             type: "analyser_job_analysis_finished",
             jobId,
             data: validatedAnalysisOutput
