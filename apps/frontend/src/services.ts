@@ -40,6 +40,34 @@ export async function addScrapeJob(url: string, prompt: string) {
 }
 
 /**
+ * Sends a POST request to the /crawler endpoint to add a scrape job.
+ * @param jobId - The URL to scrape.
+ * @param prompt - The extraction prompt.
+ * @returns The response data from the server.
+ */
+export async function changePromtJob(jobId: string, prompt: string) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/crawler/${jobId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+    },
+    body: JSON.stringify({prompt}),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Sends a POST request to the /auth endpoint for user login.
  * @param email - The user's email.
  * @param password - The user's password.
