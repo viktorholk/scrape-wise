@@ -72,7 +72,6 @@ Your process should be as follows:
 *   Each field object within the "fields" array MUST have two keys:
     *   "label": A human-readable string describing the field (e.g., "Product Name", "Rating", "Author").
     *   "value": The actual extracted data for that field. **This value MUST be a string, a number, or a boolean.** Do not use complex objects or arrays for this value.
-*   Include 1 to 5 such field objects in the "fields" array for each item.
 *   The first field in the "fields" array should generally represent the primary identifier or main piece of information for the item.
 
     Example of one item object in the "extracted_data" array:
@@ -133,11 +132,6 @@ Example (for user request: "Extract recipe names, their ratings, and number of r
       "suitability_reason": "Good for comparing multiple recipes and their key metrics side-by-side."
     },
     {
-      "template_type": "LIST_VIEW",
-      "description": "Display each recipe as an item in a list. For each item, show 'Recipe Name' as a title, followed by 'Rating (out of 5): [value]' and 'Number of Reviews: [value]'.",
-      "suitability_reason": "Visually appealing for showcasing individual recipes with their details in a scrollable list."
-    },
-    {
       "template_type": "BAR_CHART",
       "description": "A bar chart comparing 'Number of Reviews'. X-axis: 'Recipe Name' (from field with label 'Recipe Name'). Y-axis: 'Number of Reviews' (from field with label 'Number of Reviews').",
       "suitability_reason": "Useful for visually comparing the popularity (by reviews) of different recipes."
@@ -145,7 +139,6 @@ Example (for user request: "Extract recipe names, their ratings, and number of r
   ]
 }
 `;
-
 
 export function createPageAnalysisPrompt(userExtractionRequest: string, pages: ScrapedPageData[]): string {
     const pageContents = pages.map(page => `

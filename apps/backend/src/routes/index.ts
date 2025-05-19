@@ -1,14 +1,12 @@
 import { Router } from "express";
 import usersRouter from "./users";
 import authRouter from "./auth";
-import crawlerRouter from "./crawler";
-import jobsRouter from "./jobs";
+import crawlerRouter from "./crawler-jobs";
 
 const router = Router();
 
 router.use('/auth',  authRouter)
 router.use('/users', usersRouter)
-router.use('/crawler', crawlerRouter)
-router.use('/jobs', jobsRouter)
+router.use('/crawler-jobs', crawlerRouter)
 
 export default router;

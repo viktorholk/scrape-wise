@@ -16,7 +16,7 @@ interface Job {
   crawlDepth: number;
   pageLimit: number;
   status: string;
-  results?: Array<{
+  pages?: Array<{
     url: string;
     title: string;
     linksFound: number;
@@ -35,8 +35,8 @@ export default function Jobs() {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const data = await getUserJobs(); // Fetch jobs from the service
-        setJobs(data);
+        const result = await getUserJobs(); // Fetch jobs from the service
+        setJobs(result.data);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -111,9 +111,9 @@ export default function Jobs() {
               </p>{" "}
               <div>
                 <strong>Results:</strong>
-                {selectedJob.results && selectedJob.results.length > 0 ? (
+                {selectedJob.pages && selectedJob.pages.length > 0 ? (
                   <ul className="list-disc pl-5 space-y-2">
-                    {selectedJob.results.map((result, index) => (
+                    {selectedJob.pages.map((result, index) => (
                       <li key={index}>
                         <p>
                           <strong>URL:</strong> {result.url}
@@ -127,7 +127,7 @@ export default function Jobs() {
                         </p>
                         <p>
                           <strong>Text Content:</strong>{" "}
-                          {result.textContent.slice(0, 100)}...
+                          {result.textContent?.slice(0, 100)}...
                         </p>
                       </li>
                     ))}

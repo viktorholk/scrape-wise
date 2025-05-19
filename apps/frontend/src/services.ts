@@ -23,7 +23,7 @@ export async function addScrapeJob(url: string, prompt: string) {
     throw new Error('Authentication token not found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/crawler`, {
+  const response = await fetch(`${API_BASE_URL}/crawler-jobs?analyse=true`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export async function getUserJobs() {
     throw new Error('Authentication token not found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/jobs`, {
+  const response = await fetch(`${API_BASE_URL}/crawler-jobs`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
