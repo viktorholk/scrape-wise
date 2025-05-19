@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PencilLine } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { addScrapeJob, getAuthToken, stopJob } from "@/services";
+import { addScrapeJob, getAuthToken, stopJob, changePromtJob } from "@/services";
 import { CrawlerResult } from "@/components/CrawlerResult";
 import { ExtractedDataDisplay } from "@/components/ExtractedDataDisplay";
 
@@ -77,6 +77,8 @@ export default function ScraperSearch() {
   const [prompt, setPrompt] = useState("Extract all ratings");
   const [job, setJob] = useState<ScrapeJob | null>(null);
   const [wsMessages, setWsMessages] = useState<string[]>([]);
+  const [newPrompt, setNewPrompt] = useState("");
+  const [changingPrompt, setChangingPrompt] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   // Always connect WebSocket on mount
@@ -231,6 +233,52 @@ export default function ScraperSearch() {
               variant="secondary"
             >
               Search Again
+            </Button>
+          </div>
+          {/* Add prompt change UI below */}
+          <div className="p-4 flex flex-col gap-2">
+            <label htmlFor="change-prompt-input" className="font-medium">Change Prompt &amp; Re-analyse</label>
+            <Textarea
+              id="change-prompt-input"
+              placeholder="Enter a new prompt for this job"
+              value={newPrompt}
+              onChange={e => setNewPrompt(e.target.value)}
+              rows={2}
+              disabled={changingPrompt}
+            />
+            <Button
+              onClick={async () => {
+                if (!job.results?.analyserJob?.id || !newPrompt) return;
+                setChangingPrompt(true);
+                try {
+                  const updatedResults = await changePromtJob(
+                    job.results.analyserJob.id.toString(),
+                    newPrompt
+                  );
+                  setJob({
+                    ...job,
+                    results: {
+                      ...job.results,
+                      analyserJob: {
+                        ...job.results.analyserJob,
+                        ...updatedResults,
+                      },
+                    },
+                  });
+                  setNewPrompt("");
+                } catch (err) {
+                  setWsMessages(prev => [
+                    ...prev,
+                    err instanceof Error ? err.message : "Failed to change prompt.",
+                  ]);
+                } finally {
+                  setChangingPrompt(false);
+                }
+              }}
+              disabled={changingPrompt || !newPrompt}
+              variant="default"
+            >
+              {changingPrompt ? "Updating..." : "Change Prompt"}
             </Button>
           </div>
         </>

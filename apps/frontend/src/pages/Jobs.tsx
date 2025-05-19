@@ -30,7 +30,8 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [expandedUrls, setExpandedUrls] = useState<Record<string, boolean>>({});
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null); // <-- Add this line
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -46,6 +47,13 @@ export default function Jobs() {
 
     fetchJobs();
   }, []);
+
+  // Group jobs by initialUrl
+  const jobsByUrl = jobs.reduce<Record<string, Job[]>>((acc, job) => {
+    if (!acc[job.initialUrl]) acc[job.initialUrl] = [];
+    acc[job.initialUrl].push(job);
+    return acc;
+  }, {});
 
   if (loading) {
     return <p>Loading jobs...</p>;
@@ -70,27 +78,84 @@ export default function Jobs() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Job ID</TableHead>
                     <TableHead>Initial URL</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created At</TableHead>
+                    <TableHead>Job Count</TableHead>
+                    <TableHead>Latest Status</TableHead>
+                    <TableHead>Latest Created At</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {jobs.map((job) => (
-                    <TableRow
-                      key={job.id}
-                      className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
-                      onClick={() => setSelectedJob(job)}
-                    >
-                      <TableCell>{job.id}</TableCell>
-                      <TableCell>{job.initialUrl}</TableCell>
-                      <TableCell>{job.status}</TableCell>
-                      <TableCell>
-                        {new Date(job.createdAt).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {Object.entries(jobsByUrl).map(([url, jobsForUrl]) => {
+                    // Sort jobs by createdAt descending
+                    const sortedJobs = [...jobsForUrl].sort(
+                      (a, b) =>
+                        new Date(b.createdAt).getTime() -
+                        new Date(a.createdAt).getTime()
+                    );
+                    const latestJob = sortedJobs[0];
+                    const expanded = expandedUrls[url] || false;
+                    return (
+                      <>
+                        <TableRow
+                          key={url}
+                          className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
+                          onClick={() =>
+                            setExpandedUrls((prev) => ({
+                              ...prev,
+                              [url]: !prev[url],
+                            }))
+                          }
+                        >
+                          <TableCell>
+                            <span className="mr-2">
+                              {expanded ? "▼" : "▶"}
+                            </span>
+                            {url}
+                          </TableCell>
+                          <TableCell>{jobsForUrl.length}</TableCell>
+                          <TableCell>{latestJob.status}</TableCell>
+                          <TableCell>
+                            {new Date(latestJob.createdAt).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                        {expanded &&
+                          sortedJobs.map((job) => (
+                            <TableRow
+                              key={job.id}
+                              className="bg-gray-100 dark:bg-gray-800"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedJob(job); // <-- Set selected job here
+                              }}
+                            >
+                              <TableCell colSpan={4}>
+                                <div className="flex flex-col gap-1">
+                                  <span>
+                                    <strong>Job ID:</strong> {job.id}
+                                  </span>
+                                  <span>
+                                    <strong>Status:</strong> {job.status}
+                                  </span>
+                                  <span>
+                                    <strong>Created At:</strong>{" "}
+                                    {new Date(job.createdAt).toLocaleString()}
+                                  </span>
+                                  <button
+                                    className="text-blue-600 underline w-fit"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedJob(job); // <-- Set selected job here
+                                    }}
+                                  >
+                                    View Details
+                                  </button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -108,7 +173,7 @@ export default function Jobs() {
             <CardContent className="space-y-4">
               <p>
                 <strong>Job ID:</strong> {selectedJob.id}
-              </p>{" "}
+              </p>
               <div>
                 <strong>Results:</strong>
                 {selectedJob.pages && selectedJob.pages.length > 0 ? (
