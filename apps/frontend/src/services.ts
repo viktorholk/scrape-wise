@@ -145,3 +145,83 @@ export async function updateUser(userData: {
 
   return response.json();
 }
+
+/**
+ * Sets the preferred template for a specific job.
+ * @param jobId - The job's ID.
+ * @param templateType - The template type to set (e.g., "TABLE", "LIST_VIEW", "BAR_CHART").
+ * @returns The updated job data from the server.
+ */
+export async function setJobTemplate(jobId: number, templateType: string) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/template`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ templateType }),
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to set job template');
+  }
+
+  return response.json();
+}
+
+/**
+ * Stops a running job by its ID.
+ * @param jobId - The job's ID.
+ * @returns The response data from the server.
+ */
+export async function stopJob(jobId: number) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/stop`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to stop job');
+  }
+
+  return response.json();
+}
+
+/**
+ * Decodes a JWT token and returns its payload.
+ */
+function decodeJwt(token: string): any {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Checks if the JWT token is expired.
+ */
+export function isTokenExpired(token: string | null): boolean {
+  if (!token) return true;
+  const payload = decodeJwt(token);
+  if (!payload || !payload.exp) return true;
+  // exp is in seconds
+  return Date.now() >= payload.exp * 1000;
+}
+

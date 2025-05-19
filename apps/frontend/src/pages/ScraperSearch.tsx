@@ -1,72 +1,155 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScanSearch, Loader2, CheckCircle, AlertTriangle, PencilLine, FileText, Download } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PencilLine } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { addScrapeJob } from '@/services'; // Import the service function
-import { ws } from '@/App';
+import { addScrapeJob, getAuthToken, stopJob } from "@/services";
+import { CrawlerResult } from "@/components/CrawlerResult";
+import { ExtractedDataDisplay } from "@/components/ExtractedDataDisplay";
+
+interface CrawlerJobPage {
+  url: string;
+  title: string;
+  linksFound: number;
+  textContent: string;
+}
+
+interface CrawlerJob {
+  id: number;
+  userId: number;
+  initialUrl: string;
+  crawlDepth: number;
+  pageLimit: number;
+  status: string;
+  pages: CrawlerJobPage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ExtractedField {
+  label: string;
+  value: any;
+}
+
+interface ExtractedDataItem {
+  fields: ExtractedField[];
+}
+
+interface PresentationSuggestion {
+  description: string;
+  template_type: "LIST_VIEW" | "BAR_CHART" | "TABLE";
+  suitability_reason: string;
+}
+
+interface AnalyserJobResults {
+  extracted_data: ExtractedDataItem[];
+  presentation_suggestions: PresentationSuggestion[];
+}
+
+interface AnalyserJob {
+  id: number;
+  userId: number;
+  crawlerJobId: number;
+  prompt: string;
+  status: string;
+  results: AnalyserJobResults;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ScrapeJobResults {
+  crawlerJob: CrawlerJob;
+  analyserJob: AnalyserJob;
+}
 
 interface ScrapeJob {
-  id: string;
   url: string;
   prompt: string;
-  status: 'loading' | 'completed' | 'error';
-  results?: any;
+  results?: ScrapeJobResults;
   error?: string;
+  inProgress?: boolean; // <-- Add this
 }
 
 export default function ScraperSearch() {
-  const [url, setUrl] = useState('https://www.scrapethissite.com/pages/simple/');
-  const [prompt, setPrompt] = useState('Extract all countries');
-  const [jobs, setJobs] = useState<ScrapeJob[]>([]);
+  const [url, setUrl] = useState("http://localhost:3001/ssr/recipes?page=16");
+  const [prompt, setPrompt] = useState("Extract all ratings");
+  const [job, setJob] = useState<ScrapeJob | null>(null);
+  const [wsMessages, setWsMessages] = useState<string[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  const updateJobStatus = useCallback((id: string, status: ScrapeJob['status'], data?: any) => {
-    setJobs(prevJobs =>
-      prevJobs.map(job =>
-        job.id === id
-          ? { ...job, status, results: status === 'completed' ? data : undefined, error: status === 'error' ? data : undefined }
-          : job
-      )
-    );
+  // Always connect WebSocket on mount
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) {
+      setWsMessages(["No authentication token found"]);
+      return;
+    }
+    const ws = new WebSocket(`ws://localhost:3010?token=${token}`);
+    wsRef.current = ws;
+
+    ws.onmessage = (event) => {
+      setWsMessages((prev) => [...prev, event.data]);
+    };
+
+    ws.onerror = () => {
+      setWsMessages((prev) => [...prev, "WebSocket error"]);
+    };
+
+    ws.onclose = () => {
+      setWsMessages((prev) => [...prev, "WebSocket closed"]);
+    };
   }, []);
 
   const handleSubmit = async () => {
     if (!url) return;
 
+    // Set job as in progress (no results yet)
+    setJob({ url, prompt, inProgress: true });
+
     try {
-      const data = await addScrapeJob(url, prompt); // Use the service function
+      const data = await addScrapeJob(url, prompt);
 
-
-      const newJob: ScrapeJob = {
-        id: data.jobId,
+      setJob({
         url,
         prompt,
-        status: 'loading',
-      };
-
-    setJobs(prevJobs => [newJob, ...prevJobs]);
-
-      console.log(data)
-      console.log(`Job ${newJob.id} completed successfully.`, data);
-      updateJobStatus(newJob.id, 'completed', data);
+        results: data,
+        inProgress: false,
+      });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to scrape the URL.';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to scrape the URL.";
+      setWsMessages((prev) => [...prev, errorMessage]);
+      setJob({
+        url,
+        prompt,
+        error: errorMessage,
+        inProgress: false,
+      });
     }
   };
 
-  return (
-    <div className=" flex flex-col items-center p-4">
-      <header className="w-full max-w-4xl mb-8 flex items-center justify-center py-4 border-b border-gray-300 dark:border-gray-700">
-        <ScanSearch className="h-8 w-8 mr-3 text-blue-600 dark:text-blue-400" />
-        <h1 className="text-3xl font-bold tracking-tight text-gray-800 dark:text-gray-200">
-          Scrape Wise
-        </h1>
-      </header>
+  const handleStopJob = async () => {
+    if (job?.results?.crawlerJob?.id) {
+      try {
+        await stopJob(job.results.crawlerJob.id);
+        setWsMessages((prev) => [...prev, "Job stopped successfully."]);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to stop job.";
+        setWsMessages((prev) => [...prev, errorMessage]);
+      }
+    }
+    setJob(null);
+    setUrl("");
+    setPrompt("");
+  };
 
-      <main className="w-full">
-        <Card className="mb-6 shadow-md dark:bg-gray-850 max-w-md mx-auto">
+  return (
+    <Card className="mb-6 shadow-md dark:bg-gray-850 max-w-md mx-auto">
+      {!job?.results && (
+        <>
           <CardHeader>
             <div className="flex items-center">
               <PencilLine className="h-5 w-5 mr-2" />
@@ -82,9 +165,9 @@ export default function ScraperSearch() {
                 placeholder="https://example.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
+                disabled={!!job?.inProgress}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="prompt-input">Extraction Prompt</Label>
               <Textarea
@@ -93,78 +176,65 @@ export default function ScraperSearch() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 rows={3}
+                disabled={!!job?.inProgress}
               />
             </div>
-
-            <Button onClick={handleSubmit} disabled={!url} className="w-full">
-              Add Scrape Job
-            </Button>
+            {/* Show "Add Scrape Job" if no job in progress, otherwise "Stop Job" */}
+            {job?.inProgress ? (
+              <Button
+                onClick={handleStopJob}
+                className="w-full"
+                variant="destructive"
+              >
+                Stop Job
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={!url}
+                className="w-full"
+              >
+                Add Scrape Job
+              </Button>
+            )}
+            {/* Display WebSocket messages */}
+            <div className="mt-4">
+              <Label>WebSocket Messages</Label>
+              <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded h-32 overflow-auto text-xs">
+                {wsMessages.map((msg, idx) => (
+                  <div key={idx}>{msg}</div>
+                ))}
+              </div>
+            </div>
           </CardContent>
-        </Card>
-
-        {/* Container for displaying scrape job cards - switched to Flexbox */}
-        <div className="w-full  flex flex-wrap justify-center"> {/* Use flex, wrap, and center. Adjusted padding */}
-          {jobs.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 dark:text-gray-400 py-10">
-              No scrape jobs added yet. Add one using the form above.
-            </div>
+        </>
+      )}
+      {job?.results && (
+        <>
+          <CrawlerResult result={job.results} />
+          {job.results.analyserJob?.results && (
+            <ExtractedDataDisplay
+              extractedData={job.results.analyserJob.results.extracted_data}
+              presentationSuggestions={job.results.analyserJob.results.presentation_suggestions}
+              jobId={job.results.analyserJob.id}
+            />
           )}
-          {jobs.map((job) => (
-            // Placeholder for the ScrapeJobCard component
-            // Added width classes and padding to simulate grid columns/gap
-            <div key={job.id} className="w-full md:w-1/2 lg:w-1/3 p-2"> 
-              <Card className="dark:bg-gray-850 shadow-md flex flex-col h-full"> {/* Ensure card fills the div height */}
-                <CardHeader>
-                  <div className="flex items-center"> {/* Flex container for icon + title */}
-                    <FileText className="h-4 w-4 mr-2" />
-                    <CardTitle className="text-sm truncate">Job: {job.id}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow min-h-[180px] flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs truncate mb-1">URL: {job.url}</p>
-                    <p className="text-xs truncate mb-2">Prompt: {job.prompt || '-'}</p>
-                  </div>
-                  <div className="mt-2">
-                    {job.status === 'loading' && (
-                      <div className="flex items-center text-xs text-yellow-500">
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Loading...
-                      </div>
-                    )}
-                    {job.status === 'completed' && (
-                      <div className="flex items-center text-xs text-green-500">
-                        <CheckCircle className="h-4 w-4 mr-1" /> Completed
-                      </div>
-                    )}
-                    {job.status === 'error' && (
-                      <div className="flex items-center text-xs text-red-500">
-                        <AlertTriangle className="h-4 w-4 mr-1" /> Error
-                      </div>
-                    )}
-                  </div>
-                  {/* TODO: Display actual results here */} 
-                </CardContent>
-
-                <CardFooter>
-                  <Button variant="outline" onClick={() => {
-                    console.log("Stopping job:", job.id);
-                    ws.send(JSON.stringify({
-                      type: 'crawler_job_stop',
-                      jobId: job.id
-                    }))
-                  }}>
-                    <Download className="h-4 w-4 mr-1" /> Stop
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          ))}
-        </div>
-      </main>
-
-      <footer className="w-full max-w-4xl mt-8 pt-4 text-center text-xs text-gray-500 dark:text-gray-400 border-t border-gray-300 dark:border-gray-700">
-        © {new Date().getFullYear()} Scrape Wise - Simple Web Scraping
-      </footer>
-    </div>
+          <div className="p-4 flex justify-center">
+            <Button
+              onClick={() => {
+                setJob(null);
+                setUrl("");
+                setPrompt("");
+                setWsMessages([]);
+              }}
+              className="w-full"
+              variant="secondary"
+            >
+              Search Again
+            </Button>
+          </div>
+        </>
+      )}
+    </Card>
   );
 }
