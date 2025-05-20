@@ -24,9 +24,9 @@ const requestHandler = (
               : {}),
           });
         }
-        console.error("Unhandled error (not an AppError) in requestHandler:", error);
+        console.error("Unhandled error in requestHandler:", error);
       });
   };
 }
 
-export { requestHandler}
+export { requestHandler }

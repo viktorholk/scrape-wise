@@ -35,12 +35,12 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
     activeConnections.set(user.userId, ws);
 
     ws.on('message', (message) => {
-      console.log(`Received from ${(ws as any).userId}: ${message}`); 
+      console.log(`Received from ${(ws as any).userId}: ${message}`);
       try {
         const data = JSON.parse(message.toString());
 
         if (data.type === 'crawler_job_stop') {
-          console.log(`Received from ${(ws as any).userId}: ${message}`); 
+          console.log(`Received from ${(ws as any).userId}: ${message}`);
           eventEmitter.emit(`${data.jobId}_crawler_job_stop`, data.jobId);
         }
       } catch (error) {
@@ -48,10 +48,10 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
       }
     });
 
-    ws.on('error', (error) => { 
-      console.error(`WebSocket error for user ${(ws as any).userId}:`, error); 
+    ws.on('error', (error) => {
+      console.error(`WebSocket error for user ${(ws as any).userId}:`, error);
       if ((ws as any).userId) {
-          activeConnections.delete((ws as any).userId);
+        activeConnections.delete((ws as any).userId);
       }
     });
 
@@ -68,38 +68,29 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
   });
 }
 
-
-const validWsMessageTypes = [
-  "crawler_started",
-  "crawler_job_progress",
-  "crawler_job_progress_error",
-  "crawler_job_finished",
-  "analyser_job_relevance_started",
-  "analyser_job_relevance_finished",
-  "analyser_job_analysis_started",
-  "analyser_job_analysis_finished",
-];
-
+type WsMessageType = 'crawler_job_started' |
+  'crawler_job_progress' |
+  'crawler_job_progress_error' |
+  'crawler_job_finished' |
+  'analyser_job_relevance_started' |
+  'analyser_job_relevance_finished' |
+  'analyser_job_analysis_started' |
+  'analyser_job_analysis_finished';
 
 interface WsMessagePayload {
-  type: (typeof validWsMessageTypes)[number];
+  type: WsMessageType;
   jobId: number;
   data?: object | Array<object>;
 }
-export function sendWsMessageToUser(userId: number, message: WsMessagePayload): Promise<void> { 
-
-  return new Promise((resolve, _) => {
-    const ws = activeConnections.get(userId);
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      const messageString = JSON.stringify(message);
-      ws.send(messageString);
-      resolve();
-    } else {
-      if(!ws) console.log(`No active WS connection found for user ${userId}.`);
-      else if(ws.readyState !== WebSocket.OPEN) console.log(`WS connection for user ${userId} is not OPEN (state: ${ws.readyState}).`);
-      resolve();
-    }
-  });
+export function sendWsMessageToUser(userId: number, message: WsMessagePayload) {
+  const ws = activeConnections.get(userId);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const messageString = JSON.stringify(message);
+    ws.send(messageString);
+  } else {
+    if (!ws) console.log(`No active WS connection found for user ${userId}.`);
+    else if (ws.readyState !== WebSocket.OPEN) console.log(`WS connection for user ${userId} is not OPEN (state: ${ws.readyState}).`);
+  }
 }
 
 function getUser(req: IncomingMessage): UserTokenPayload | null {
