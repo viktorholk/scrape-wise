@@ -5,9 +5,9 @@
   "license": "ISC",
   "author": "",
   "main": "build/index.js",
-  "type": "commonjs",
   "scripts": {
-    "start": "ts-node --files -r tsconfig-paths/register src/index.ts",
+    "start": "node build/index.js",
+    "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "dev": "ts-node-dev --files -r tsconfig-paths/register src/index.ts",
     "db:migrate": "prisma migrate dev --skip-generate",
     "db:deploy": "prisma migrate deploy",
@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@packages/database": "workspace:*",
-    "@prisma/client": "^6.7.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -35,9 +34,9 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.14",
     "@types/ws": "^8.18.1",
-    "prisma": "^6.7.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }

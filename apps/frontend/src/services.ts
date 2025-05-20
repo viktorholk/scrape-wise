@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3010';
+const API_BASE_URL =  '/api';
 
 /**
  * Retrieves the authentication token from cookies.

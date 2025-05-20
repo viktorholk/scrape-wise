@@ -14,8 +14,7 @@ export function initWebSocket(server: Server<typeof IncomingMessage, typeof Serv
     return;
   }
 
-  wss = new WebSocket.Server({ server });
-  console.log('WebSocket server initialized');
+  wss = new WebSocket.Server({ server, path: '/api' });
 
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     console.log('Client attempting to connect...');

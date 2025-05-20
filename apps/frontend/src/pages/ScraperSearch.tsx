@@ -88,7 +88,7 @@ export default function ScraperSearch() {
       setWsMessages(["No authentication token found"]);
       return;
     }
-    const ws = new WebSocket(`ws://localhost:3010?token=${token}`);
+    const ws = new WebSocket(`ws://localhost/api?token=${token}`);
     wsRef.current = ws;
 
     ws.onmessage = (event) => {
