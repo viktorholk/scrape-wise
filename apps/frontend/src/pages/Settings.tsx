@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateUser } from '@/services'; // Import the updateUser function
+import { updateUser } from '@/services';
+import { useUser } from '@/UserContext'; // Import useUser
 
 const Settings = () => {
+    const { user } = useUser(); // Get user from context
+
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [password, setPassword] = useState('');
@@ -12,6 +15,14 @@ const Settings = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Set default values from user context
+    useEffect(() => {
+        if (user) {
+            setFirstName(user.firstname || '');
+            setLastName(user.lastname || '');
+        }
+    }, [user]);
 
     const handleSave = async () => {
         if (password !== confirmPassword) {

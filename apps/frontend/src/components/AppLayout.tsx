@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { cn } from "@/lib/utils";
 import LogoutButton from "./LogoutButton";
 import ProtectedRoute from "./ProtectedRoute";
+import { useUser, UserProvider } from "@/UserContext";
 export interface AppSidebarItem {
   title: string;
   url: string;
@@ -53,10 +54,10 @@ interface SidebarLayoutProps {
 }
 
 function SidebarLayout({
-  user,
   sidebarGroups,
   isItemActive,
-}: SidebarLayoutProps) {
+}: Omit<SidebarLayoutProps, "user">) {
+  const { user } = useUser();
   const { isMobile } = useSidebar();
 
   return (
@@ -123,10 +124,10 @@ function SidebarLayout({
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsed=true]:hidden">
                     <span className="truncate font-medium">
-                      {user.firstName} {user.lastName}
+                      {user?.firstname} {user?.lastname}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {user.email}
+                      {user?.email}
                     </span>
                   </div>
                   <MoreVerticalIcon className="ml-auto size-4 group-data-[collapsed=true]:hidden" />
@@ -147,10 +148,10 @@ function SidebarLayout({
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-medium">
-                        {user.firstName} {user.lastName}
+                        {user?.firstname} {user?.lastname}
                       </span>
                       <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
+                        {user?.email}
                       </span>
                     </div>
                   </div>
@@ -208,27 +209,21 @@ export function AppLayout() {
 
   return (
     <ProtectedRoute>
-      <SidebarProvider defaultOpen={true}>
-        <SidebarLayout
-          user={{
-            firstName: "John",
-            lastName: "Doe",
-            email: "john.doe@example.com",
-          }}
-          sidebarGroups={sidebarGroups}
-          isItemActive={isItemActive}
-        />
-
-        <SidebarInset>
-          <header className="sticky top-0 z-10 border-b bg-background p-4 shadow-sm">
-            <SidebarTrigger />
-          </header>
-          <main className="flex-1 p-4 md:p-6 lg:p-8">
-            <Outlet />
-          </main>
-        </SidebarInset>
-        <Toaster />
-      </SidebarProvider>
+        <SidebarProvider defaultOpen={true}>
+          <SidebarLayout
+            sidebarGroups={sidebarGroups}
+            isItemActive={isItemActive}
+          />
+          <SidebarInset>
+            <header className="sticky top-0 z-10 border-b bg-background p-4 shadow-sm">
+              <SidebarTrigger />
+            </header>
+            <main className="flex-1 p-4 md:p-6 lg:p-8">
+              <Outlet />
+            </main>
+          </SidebarInset>
+          <Toaster />
+        </SidebarProvider>
     </ProtectedRoute>
   );
 }

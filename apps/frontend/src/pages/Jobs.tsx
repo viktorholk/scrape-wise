@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"; // Import the Table components
+import React from "react";
 
 interface Job {
   id: number;
@@ -37,7 +38,6 @@ export default function Jobs() {
     const fetchJobs = async () => {
       try {
         const data = await getUserJobs();
-        console.log("Fetched jobs:", data); // Log the fetched jobs
         setJobs(data);
       } catch (err: any) {
         setError(err.message);
@@ -96,9 +96,8 @@ export default function Jobs() {
                     const latestJob = sortedJobs[0];
                     const expanded = expandedUrls[url] || false;
                     return (
-                      <>
+                      <React.Fragment key={url}>
                         <TableRow
-                          key={url}
                           className="cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
                           onClick={() =>
                             setExpandedUrls((prev) => ({
@@ -126,7 +125,7 @@ export default function Jobs() {
                               className="bg-gray-100 dark:bg-gray-800"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedJob(job); // <-- Set selected job here
+                                setSelectedJob(job);
                               }}
                             >
                               <TableCell colSpan={4}>
@@ -145,7 +144,7 @@ export default function Jobs() {
                                     className="text-blue-600 underline w-fit"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setSelectedJob(job); // <-- Set selected job here
+                                      setSelectedJob(job);
                                     }}
                                   >
                                     View Details
@@ -154,7 +153,7 @@ export default function Jobs() {
                               </TableCell>
                             </TableRow>
                           ))}
-                      </>
+                      </React.Fragment>
                     );
                   })}
                 </TableBody>
