@@ -175,35 +175,6 @@ export async function updateUser(userData: {
 }
 
 /**
- * Sets the preferred template for a specific job.
- * @param jobId - The job's ID.
- * @param templateType - The template type to set (e.g., "TABLE", "LIST_VIEW", "BAR_CHART").
- * @returns The updated job data from the server.
- */
-export async function setJobTemplate(jobId: number, templateType: string) {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error('Authentication token not found');
-  }
-
-  const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/template`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify({ templateType }),
-  });
-
-  if (!response.ok) {
-    const { message } = await response.json();
-    throw new Error(message || 'Failed to set job template');
-  }
-
-  return response.json();
-}
-
-/**
  * Stops a running job by its ID.
  * @param jobId - The job's ID.
  * @returns The response data from the server.
@@ -251,5 +222,39 @@ export function isTokenExpired(token: string | null): boolean {
   if (!payload || !payload.exp) return true;
   // exp is in seconds
   return Date.now() >= payload.exp * 1000;
+}
+
+/**
+ * Creates a new template and links it to an analyser job.
+ * @param template - The template data including analyserJobId.
+ * @returns The created template from the server.
+ */
+export async function setJobTemplate(template: {
+  name: string;
+  content: string;
+  type: string;
+  dynamic: boolean;
+  analyserJobId: number;
+}) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/templates`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(template),
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to create template');
+  }
+
+  return response.json();
 }
 

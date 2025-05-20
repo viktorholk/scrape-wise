@@ -20,6 +20,12 @@ enum JobStatus {
   ERROR
 }
 
+enum TemplateType {
+  TABLE
+  BAR_CHART
+  LIST_VIEW
+}
+
 model User {
   id        Int     @id @default(autoincrement())
   email     String  @unique
@@ -57,6 +63,8 @@ model AnalyserJob {
   user       User             @relation(fields: [userId], references: [id])
   crawlerJobId     Int
   crawlerJob       CrawlerJob @relation(fields: [crawlerJobId], references: [id]) 
+  templateId   Int?         @unique
+  template     Template?    @relation(fields: [templateId], references: [id])
 
   prompt String
 
@@ -66,6 +74,19 @@ model AnalyserJob {
   updatedAt  DateTime         @updatedAt
 
   @@index([userId])
+}
+
+model Template {
+  id           Int          @id @default(autoincrement())
+  name         String
+  content      String
+  type         TemplateType @default(TABLE)
+  dynamic      Boolean
+
+  analyserJob  AnalyserJob?
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Recipe {
@@ -84,3 +105,4 @@ model Recipe {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
