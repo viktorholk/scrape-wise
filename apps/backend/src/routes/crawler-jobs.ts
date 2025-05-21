@@ -71,7 +71,7 @@ router.post('/', authMiddleware, requestHandler(async (req: Request, res: Respon
 }));
 
 
-router.post(':id/analyse', requestHandler(async (req: Request, res: Response): Promise<void> => {
+router.post('/:id/analyse', authMiddleware, requestHandler(async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
   const { id } = req.params;
   const { prompt } = req.body;

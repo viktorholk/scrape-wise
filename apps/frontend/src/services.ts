@@ -51,7 +51,7 @@ export async function changePromtJob(jobId: string, prompt: string) {
     throw new Error('Authentication token not found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/crawler/${jobId}`, {
+  const response = await fetch(`${API_BASE_URL}/crawler-jobs/${jobId}/analyse`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -121,16 +121,16 @@ export async function registerUser(userData: {
  * Retrieves all jobs created by the authenticated user.
  * @returns The list of jobs from the server.
  */
-export async function getUserJobs() {
+export async function getUserJobs(page = 1, limit = 10) {
   const token = getAuthToken();
   if (!token) {
     throw new Error('Authentication token not found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/crawler-jobs`, {
+  const response = await fetch(`${API_BASE_URL}/crawler-jobs?page=${page}&limit=${limit}`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`,
     },
   });
 

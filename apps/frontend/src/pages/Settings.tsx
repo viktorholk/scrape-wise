@@ -45,7 +45,7 @@ const Settings = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 flex flex-col items-center justify-center p-4">
+        <div className="text-gray-900 dark:text-gray-100 flex flex-col items-center justify-center p-4">
             <Card className="shadow-md dark:bg-gray-850 max-w-md w-full">
                 <CardHeader>
                     <CardTitle className="text-xl text-center">User Settings</CardTitle>

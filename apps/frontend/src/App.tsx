@@ -9,9 +9,10 @@ import Register from "./pages/Register";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
-import ScraperSearch from "./pages/ScraperSearch";
+import Analysere from "./pages/Analysere";
 import Settings from "./pages/Settings";
 import RootLayout from "./components/RootLayout";
+import Intro from "./pages/Intro"; // <-- Add this import
 
 function App() {
   return (
@@ -19,10 +20,11 @@ function App() {
       <Routes>
         <Route path="/" element={<RootLayout />}>
           <Route path="/" element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/scraper-search" element={<ScraperSearch />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/Settings" element={<Settings />} />
+            <Route index element={<Intro />} /> {/* Default intro/info page */}
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="Analysere" element={<Analysere />} />
+            <Route path="jobs" element={<Jobs />} />
+            <Route path="Settings" element={<Settings />} />
           </Route>
 
           <Route path="/login" element={<Login />} />

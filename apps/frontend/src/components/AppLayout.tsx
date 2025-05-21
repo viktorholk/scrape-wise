@@ -1,5 +1,5 @@
 import * as React from "react";
-import { LayoutGrid, List, MoreVerticalIcon, UserIcon } from "lucide-react";
+import { LayoutGrid, Gauge, Search, List, MoreVerticalIcon, UserIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -66,15 +66,17 @@ function SidebarLayout({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg">
-              <div className="flex items-center gap-3">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <LayoutGrid className="size-4" />
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/">
+                <div className="flex items-center gap-3">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <LayoutGrid className="size-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5 leading-none">
+                    <span className="text-sm font-semibold">Scrape Wise</span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="text-sm font-semibold">Scrape Wise</span>
-                </div>
-              </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -157,9 +159,16 @@ function SidebarLayout({
                     </div>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator/>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <LogoutButton/>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <LogoutButton />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -186,12 +195,12 @@ export function AppLayout() {
         {
           title: "dashboard",
           url: "/dashboard",
-          icon: LayoutGrid,
+          icon: Gauge, // Changed from LayoutGrid to Gauge
         },
         {
-          title: "scraper search",
-          url: "/scraper-search",
-          icon: LayoutGrid,
+          title: "Analysere",
+          url: "/analysere",
+          icon: Search, // Changed from LayoutGrid to Search
         },
         {
           title: "Jobs",
@@ -204,21 +213,21 @@ export function AppLayout() {
 
   return (
     <ProtectedRoute>
-        <SidebarProvider defaultOpen={true}>
-          <SidebarLayout
-            sidebarGroups={sidebarGroups}
-            isItemActive={isItemActive}
-          />
-          <SidebarInset>
-            <header className="sticky top-0 z-10 border-b bg-background p-4 shadow-sm">
-              <SidebarTrigger />
-            </header>
-            <main className="flex-1 p-4 md:p-6 lg:p-8">
-              <Outlet />
-            </main>
-          </SidebarInset>
-          <Toaster />
-        </SidebarProvider>
+      <SidebarProvider defaultOpen={true}>
+        <SidebarLayout
+          sidebarGroups={sidebarGroups}
+          isItemActive={isItemActive}
+        />
+        <SidebarInset>
+          <header className="sticky top-0 z-10 border-b bg-background p-4 shadow-sm">
+            <SidebarTrigger />
+          </header>
+          <main className="flex-1 p-4 md:p-6 lg:p-8">
+            <Outlet />
+          </main>
+        </SidebarInset>
+        <Toaster />
+      </SidebarProvider>
     </ProtectedRoute>
   );
 }

@@ -118,8 +118,16 @@ export default function Register() {
             </Button>
           </form>
           <div className='p-3 h-5'>
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            </div>
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          </div>
+          <Button
+            className="w-full mt-2"
+            variant="secondary"
+            type="button"
+            onClick={() => navigate('/login')}
+          >
+            Back to Login
+          </Button>
         </CardContent>
       </Card>
     </div>
