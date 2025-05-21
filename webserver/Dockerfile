@@ -15,7 +15,7 @@ RUN pnpm --filter frontend run build
 
 FROM nginx:stable-alpine AS production
 
-COPY --from=frontend_builder /builder/apps/frontend/dist /var/www/html
+COPY --from=frontend_builder /builder/apps/frontend/dist /usr/share/nginx/html/app
 
 # Copy your custom Nginx configuration
 # This will replace the default Nginx site configuration.
