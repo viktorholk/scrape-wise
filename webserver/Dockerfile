@@ -13,7 +13,7 @@ COPY ./apps/frontend/ ./apps/frontend/
 
 RUN pnpm --filter frontend run build
 
-FROM nginx:stable-alpine as production
+FROM nginx:stable-alpine AS production
 
 COPY --from=frontend_builder /builder/apps/frontend/dist /usr/share/nginx/html
 
