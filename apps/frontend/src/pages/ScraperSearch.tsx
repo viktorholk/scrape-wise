@@ -89,7 +89,7 @@ export default function ScraperSearch() {
       return;
     }
 
-    const url = import.meta.env.MODE === 'development' ? 'ws://localhost:3010/api' : 'ws://http://scrape-wise.holk.solutions/api';
+    const url = import.meta.env.MODE === 'development' ? 'ws://localhost:3010/api' : 'wss://http://scrape-wise.holk.solutions/api';
 
     const ws = new WebSocket(`${url}?token=${token}`);
     wsRef.current = ws;
