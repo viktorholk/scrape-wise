@@ -45,7 +45,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = getCookie("token");
       if (token) {
         const payload = parseJwt(token);
-        if (payload && payload.firstname && payload.lastname && payload.email) {
+        if (payload && payload.email) {
           setUser({
             firstname: payload.firstname,
             lastname: payload.lastname,

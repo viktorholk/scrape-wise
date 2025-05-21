@@ -22,6 +22,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Toaster } from "sonner";
@@ -156,15 +157,9 @@ function SidebarLayout({
                     </div>
                   </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator/>
                 <DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings">
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <LogoutButton />
+                  <LogoutButton/>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

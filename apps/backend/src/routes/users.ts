@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 const router = Router();
 
 router.post('/', requestHandler(async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = req.body;
+    const { email, password, firstname, lastname } = req.body;
 
     if (!email || !password) {
         throw new BadRequestError("Email and password are required");
@@ -25,7 +25,9 @@ router.post('/', requestHandler(async (req: Request, res: Response): Promise<voi
     const newUser = await prisma.user.create({ 
         data: { 
             email, 
-            password: hashedPassword 
+            firstName: firstname,
+            lastName: lastname,
+            password: hashedPassword,
         } 
     });
 

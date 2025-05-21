@@ -15,7 +15,9 @@ export default function Register() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleRegister = async () => {
+  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     if (!firstname || !lastname || !email || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
@@ -30,13 +32,15 @@ export default function Register() {
     setError('');
 
     try {
-      await registerUser({ firstname, lastname, email, password }); // Use the service function
+      await registerUser({ firstname, lastname, email, password });
       navigate('/login');
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+
+
   };
 
   return (
@@ -46,70 +50,76 @@ export default function Register() {
           <CardTitle className="text-xl text-center">Register</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <div className="space-y-2">
-            <label htmlFor="firstname-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              First Name
-            </label>
-            <Input
-              id="firstname-input"
-              type="text"
-              placeholder="Enter your first name"
-              value={firstname}
-              onChange={(e) => setFirstname(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="lastname-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Last Name
-            </label>
-            <Input
-              id="lastname-input"
-              type="text"
-              placeholder="Enter your last name"
-              value={lastname}
-              onChange={(e) => setLastname(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Email
-            </label>
-            <Input
-              id="email-input"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Password
-            </label>
-            <Input
-              id="password-input"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="confirm-password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Confirm Password
-            </label>
-            <Input
-              id="confirm-password-input"
-              type="password"
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-          <Button onClick={handleRegister} className="w-full" disabled={loading}>
-            {loading ? 'Registering...' : 'Register'}
-          </Button>
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div className="flex space-x-6">
+              <div className="space-y-2 flex-1">
+                <label htmlFor="firstname-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  First Name
+                </label>
+                <Input
+                  id="firstname-input"
+                  type="text"
+                  placeholder="Enter your first name"
+                  value={firstname}
+                  onChange={(e) => setFirstname(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 flex-1">
+                <label htmlFor="lastname-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Last Name
+                </label>
+                <Input
+                  id="lastname-input"
+                  type="text"
+                  placeholder="Enter your last name"
+                  value={lastname}
+                  onChange={(e) => setLastname(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email
+              </label>
+              <Input
+                id="email-input"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Password
+              </label>
+              <Input
+                id="password-input"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="confirm-password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Confirm Password
+              </label>
+              <Input
+                id="confirm-password-input"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? 'Registering...' : 'Register'}
+            </Button>
+          </form>
+          <div className='p-3 h-5'>
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            </div>
         </CardContent>
       </Card>
     </div>
