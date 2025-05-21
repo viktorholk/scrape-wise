@@ -1,4 +1,4 @@
-const API_BASE_URL =  '/api';
+const API_BASE_URL = import.meta.env.MODE === 'development' ? 'http://localhost:3010/api' : '/api';
 
 /**
  * Retrieves the authentication token from cookies.
