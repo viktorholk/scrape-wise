@@ -100,7 +100,13 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
     setSaving(true);
     setSaveMsg(null);
     try {
-      await setJobTemplate(jobId, suggestion.template_type);
+      await setJobTemplate({
+        name: suggestion.template_type,
+        content: JSON.stringify(content),
+        type: suggestion.template_type,
+        dynamic: false,
+        analyserJobId: jobId,
+      });
       setSaveMsg("Template saved!");
     } catch (e: any) {
       setSaveMsg(e.message || "Failed to save template");

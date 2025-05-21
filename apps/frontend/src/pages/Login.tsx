@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { loginUser } from '@/services'; // Import the service function
-import { useUser } from "@/UserContext"; // adjust path if needed
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,7 +11,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { setUser } = useUser();
 
   const handleLogin = async () => {
     if (!email || !password) {

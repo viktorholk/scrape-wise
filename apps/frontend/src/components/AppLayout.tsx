@@ -30,7 +30,7 @@ import { Avatar, AvatarFallback } from "./ui/avatar";
 import { cn } from "@/lib/utils";
 import LogoutButton from "./LogoutButton";
 import ProtectedRoute from "./ProtectedRoute";
-import { useUser, UserProvider } from "@/UserContext";
+import { useUser } from "@/UserContext";
 export interface AppSidebarItem {
   title: string;
   url: string;
