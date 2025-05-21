@@ -89,9 +89,12 @@ export default function ScraperSearch() {
       return;
     }
 
-    const url = import.meta.env.MODE === 'development' ? 'ws://localhost:3010/api' : 'wss://http://scrape-wise.holk.solutions/api';
+    const isDevelopment = import.meta.env.MODE === 'development';
+    const wsProtocol = isDevelopment ? 'ws://' : 'wss://';
+    const wsHost = isDevelopment ? 'localhost:3010' : 'scrape-wise.holk.solutions';
+    const wsUrl = `${wsProtocol}${wsHost}/api`;
 
-    const ws = new WebSocket(`${url}?token=${token}`);
+    const ws = new WebSocket(`${wsUrl}?token=${token}`);
     wsRef.current = ws;
 
     ws.onmessage = (event) => {
