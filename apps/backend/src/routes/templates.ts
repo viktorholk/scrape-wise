@@ -7,13 +7,27 @@ import { prisma } from "@packages/database";
 
 const router = Router();
 
-// Get all templates for the authenticated user
+// Get all templates for the authenticated user (with pagination)
 router.get(
   '/',
   authMiddleware,
   requestHandler(async (req: Request, res: Response): Promise<void> => {
     const userId = req.userId;
     if (!userId) throw new BadRequestError("No user found");
+
+    // Parse pagination params
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit as string) || 10));
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination info
+    const total = await prisma.template.count({
+      where: {
+        analyserJob: {
+          userId: userId,
+        },
+      },
+    });
 
     const templates = await prisma.template.findMany({
       where: {
@@ -22,9 +36,17 @@ router.get(
         },
       },
       orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
     });
 
-    res.status(200).json(templates);
+    res.status(200).json({
+      templates,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
   })
 );
 

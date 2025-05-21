@@ -258,3 +258,31 @@ export async function setJobTemplate(template: {
   return response.json();
 }
 
+/**
+ * Retrieves all templates for the authenticated user with pagination.
+ * @param page - The page number (default 1)
+ * @param limit - The number of templates per page (default 10)
+ * @returns The paginated templates response from the server.
+ */
+export async function getTemplates(page = 1, limit = 10) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/templates?page=${page}&limit=${limit}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to fetch templates');
+  }
+
+  return response.json();
+}
+
