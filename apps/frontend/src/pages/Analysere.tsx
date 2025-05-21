@@ -5,7 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PencilLine } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { addScrapeJob, getAuthToken, stopJob, changePromtJob } from "@/services";
+import {
+  addScrapeJob,
+  getAuthToken,
+  stopJob,
+  changePromtJob,
+} from "@/services";
 import { CrawlerResult } from "@/components/CrawlerResult";
 import { ExtractedDataDisplay } from "@/components/ExtractedDataDisplay";
 import { motion, AnimatePresence } from "framer-motion";
@@ -90,9 +95,11 @@ export default function Analysere() {
       return;
     }
 
-    const isDevelopment = import.meta.env.MODE === 'development';
-    const wsProtocol = isDevelopment ? 'ws://' : 'wss://';
-    const wsHost = isDevelopment ? 'localhost:3010' : 'scrape-wise.holk.solutions';
+    const isDevelopment = import.meta.env.MODE === "development";
+    const wsProtocol = isDevelopment ? "ws://" : "wss://";
+    const wsHost = isDevelopment
+      ? "localhost:3010"
+      : "scrape-wise.holk.solutions";
     const wsUrl = `${wsProtocol}${wsHost}/api`;
 
     const ws = new WebSocket(`${wsUrl}?token=${token}`);
@@ -155,6 +162,12 @@ export default function Analysere() {
     setPrompt("");
   };
 
+  // Helper to create a unique key for AnimatePresence when analyserJob changes
+  const analyserJobKey =
+    job?.results?.analyserJob?.id && job?.results?.analyserJob?.updatedAt
+      ? `results-${job.results.analyserJob.id}-${job.results.analyserJob.updatedAt}`
+      : "results";
+
   return (
     <Card className="mb-6 shadow-md dark:bg-gray-850 max-w-4xl mx-auto">
       <AnimatePresence initial={false} mode="wait">
@@ -169,59 +182,66 @@ export default function Analysere() {
           >
             <div className="flex flex-row gap-6 p-6">
               {/* Left: Input fields */}
-              <div className="flex-1 space-y-4">
+              <div className="flex-1 flex flex-col h-[28rem]">
                 <CardHeader>
                   <div className="flex items-center">
                     <PencilLine className="h-5 w-5 mr-2" />
-                    <CardTitle className="text-xl">Enter URL and Instructions</CardTitle>
+                    <CardTitle className="text-xl">
+                      Enter URL and Instructions
+                    </CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="url-input">Website URL</Label>
-                    <Input
-                      id="url-input"
-                      type="url"
-                      placeholder="https://example.com"
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      disabled={!!job?.inProgress}
-                    />
+                <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="space-y-2">
+                      <Label htmlFor="url-input">Website URL</Label>
+                      <Input
+                        id="url-input"
+                        type="url"
+                        placeholder="https://example.com"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        disabled={!!job?.inProgress}
+                      />
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <Label htmlFor="prompt-input">Extraction Prompt</Label>
+                      <Textarea
+                        id="prompt-input"
+                        placeholder="e.g., Extract all product names and prices."
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        rows={10} // Taller input
+                        className="h-60 w-[28rem] max-w-full" // Fixed width and height
+                        disabled={!!job?.inProgress}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="prompt-input">Extraction Prompt</Label>
-                    <Textarea
-                      id="prompt-input"
-                      placeholder="e.g., Extract all product names and prices."
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      rows={3}
-                      disabled={!!job?.inProgress}
-                    />
+                  <div>
+                    {job?.inProgress ? (
+                      <Button
+                        onClick={handleStopJob}
+                        className="w-full"
+                        variant="destructive"
+                      >
+                        Stop Job
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={!url}
+                        className="w-full"
+                      >
+                        Add Scrape Job
+                      </Button>
+                    )}
                   </div>
-                  {job?.inProgress ? (
-                    <Button
-                      onClick={handleStopJob}
-                      className="w-full"
-                      variant="destructive"
-                    >
-                      Stop Job
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={!url}
-                      className="w-full"
-                    >
-                      Add Scrape Job
-                    </Button>
-                  )}
                 </CardContent>
               </div>
               {/* Right: WebSocket messages */}
-              <div className="flex-1 flex flex-col">
-                <Label>WebSocket Messages</Label>
-                <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded h-96 min-h-80 max-h-[32rem] overflow-auto text-xs flex-1">
+              <div className="flex-1 flex flex-col mt-8">
+                <Label className="mb-2 block">Live Messages</Label>
+                <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded h-[24rem] max-h-[28rem] overflow-auto text-xs flex-1">
                   {wsMessages.map((msg, idx) => (
                     <div key={idx}>{msg}</div>
                   ))}
@@ -231,7 +251,7 @@ export default function Analysere() {
           </motion.div>
         ) : (
           <motion.div
-            key="results"
+            key={analyserJobKey}
             initial={{ opacity: 0, y: -40, height: 0 }}
             animate={{ opacity: 1, y: 0, height: "auto" }}
             exit={{ opacity: 0, y: 40, height: 0 }}
@@ -258,18 +278,22 @@ export default function Analysere() {
             {job.results.analyserJob?.results && (
               <ExtractedDataDisplay
                 extractedData={job.results.analyserJob.results.extracted_data}
-                presentationSuggestions={job.results.analyserJob.results.presentation_suggestions}
+                presentationSuggestions={
+                  job.results.analyserJob.results.presentation_suggestions
+                }
                 jobId={job.results.analyserJob.id}
               />
             )}
             {/* Prompt change UI */}
             <div className="p-4 flex flex-col gap-2">
-              <label htmlFor="change-prompt-input" className="font-medium">Change Prompt &amp; Re-analyse</label>
+              <label htmlFor="change-prompt-input" className="font-medium">
+                Change Prompt &amp; Re-analyse
+              </label>
               <Textarea
                 id="change-prompt-input"
                 placeholder="Enter a new prompt for this job"
                 value={newPrompt}
-                onChange={e => setNewPrompt(e.target.value)}
+                onChange={(e) => setNewPrompt(e.target.value)}
                 rows={2}
                 disabled={changingPrompt}
               />
@@ -294,9 +318,11 @@ export default function Analysere() {
                     });
                     setNewPrompt("");
                   } catch (err) {
-                    setWsMessages(prev => [
+                    setWsMessages((prev) => [
                       ...prev,
-                      err instanceof Error ? err.message : "Failed to change prompt.",
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to change prompt.",
                     ]);
                   } finally {
                     setChangingPrompt(false);

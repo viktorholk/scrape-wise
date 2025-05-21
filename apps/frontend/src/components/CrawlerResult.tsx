@@ -14,12 +14,12 @@ export function CrawlerResult({ result }: CrawlerResultProps) {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Crawler & Analysis Result</CardTitle>
+        <CardTitle className="text-2xl mb-2">Crawler & Analysis Result</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         <div>
-          <Label className="font-semibold">Crawler Job</Label>
-          <div className="text-sm mt-1">
+          <Label className="font-semibold text-lg">Crawler Job</Label>
+          <div className="text-sm mt-2 space-y-2">
             <div>Status: <span className="font-mono">{crawlerJob.status}</span></div>
             <div>
               Initial URL:{" "}
@@ -28,12 +28,12 @@ export function CrawlerResult({ result }: CrawlerResultProps) {
               </a>
             </div>
           </div>
-          <Separator className="my-2" />
-          <Label className="font-semibold">Pages Crawled</Label>
-          <div className="space-y-2 mt-1">
+          <Separator className="my-4" />
+          <Label className="font-semibold text-base">Pages Crawled</Label>
+          <div className="space-y-4 mt-2">
             {crawlerJob.pages.map((page: any, idx: number) => (
-              <Card key={idx} className="p-2 bg-gray-50 dark:bg-gray-900">
-                <div className="text-xs text-gray-700 dark:text-gray-300">
+              <Card key={idx} className="p-3 bg-gray-50 dark:bg-gray-900">
+                <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
                   <div>
                     <span className="font-semibold">Title:</span>{" "}
                     {page.title || <span className="italic text-gray-400">No title</span>}
@@ -60,17 +60,17 @@ export function CrawlerResult({ result }: CrawlerResultProps) {
           </div>
         </div>
 
-        <Separator />
+        <Separator className="my-4" />
 
         <div>
-          <Label className="font-semibold">Analyser Job</Label>
-          <div className="text-sm mt-1">
+          <Label className="font-semibold text-lg">Analyser Job</Label>
+          <div className="text-sm mt-2 space-y-2">
             <div>Status: <span className="font-mono">{analyserJob.status}</span></div>
             <div>Prompt: <span className="italic">{analyserJob.prompt}</span></div>
           </div>
-          <Separator className="my-2" />
-          <Label className="font-semibold">Extracted Ratings</Label>
-          <ul className="list-decimal ml-6 mt-1 text-xs">
+          <Separator className="my-4" />
+          <Label className="font-semibold text-base">Extracted Ratings</Label>
+          <ul className="list-decimal ml-6 mt-2 text-xs space-y-2">
             {analyserJob.results?.extracted_data?.map((item: any, idx: number) => (
               <li key={idx}>
                 {item.fields.map((field: any, fidx: number) => (
@@ -81,11 +81,11 @@ export function CrawlerResult({ result }: CrawlerResultProps) {
           </ul>
           {analyserJob.results?.presentation_suggestions && (
             <>
-              <Separator className="my-2" />
-              <Label className="font-semibold">Presentation Suggestions</Label>
-              <ul className="list-disc ml-6 mt-1 text-xs">
+              <Separator className="my-4" />
+              <Label className="font-semibold text-base">Presentation Suggestions</Label>
+              <ul className="list-disc ml-6 mt-2 text-xs space-y-2">
                 {analyserJob.results.presentation_suggestions.map((s: any, idx: number) => (
-                  <li key={idx}>
+                  <li key={idx} className="mb-2">
                     <div className="font-semibold">{s.template_type}</div>
                     <div>{s.description}</div>
                     <div className="text-gray-500">{s.suitability_reason}</div>

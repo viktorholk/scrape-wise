@@ -10,7 +10,11 @@ type ExtractedDataDisplayProps = {
   jobId?: number; // Add jobId prop for API call
 };
 
-export function ExtractedDataDisplay({ extractedData, presentationSuggestions, jobId }: ExtractedDataDisplayProps) {
+export function ExtractedDataDisplay({
+  extractedData,
+  presentationSuggestions,
+  jobId,
+}: ExtractedDataDisplayProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -31,7 +35,12 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
           <thead>
             <tr>
               {headers.map((label: string, idx: number) => (
-                <th key={idx} className="border px-2 py-1 text-left bg-gray-100 dark:bg-gray-800">{label}</th>
+                <th
+                  key={idx}
+                  className="border px-2 py-1 text-left bg-gray-100 dark:bg-gray-800"
+                >
+                  {label}
+                </th>
               ))}
             </tr>
           </thead>
@@ -39,7 +48,9 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
             {extractedData.map((item: any, idx: number) => (
               <tr key={idx}>
                 {item.fields.map((field: any, fidx: number) => (
-                  <td key={fidx} className="border px-2 py-1">{field.value}</td>
+                  <td key={fidx} className="border px-2 py-1">
+                    {field.value}
+                  </td>
                 ))}
               </tr>
             ))}
@@ -50,7 +61,9 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
   };
 
   const renderBarChart = () => {
-    const max = Math.max(...extractedData.map((item: any) => item.fields[0].value));
+    const max = Math.max(
+      ...extractedData.map((item: any) => item.fields[0].value)
+    );
     return (
       <div className="space-y-1">
         {extractedData.map((item: any, idx: number) => {
@@ -58,7 +71,10 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
           return (
             <div key={idx} className="flex items-center">
               <Label className="w-12 text-xs mr-2">#{idx + 1}</Label>
-              <div className="bg-blue-500 h-4 rounded" style={{ width: `${(value / max) * 200}px` }} />
+              <div
+                className="bg-blue-500 h-4 rounded"
+                style={{ width: `${(value / max) * 200}px` }}
+              />
               <span className="ml-2 font-mono text-xs">{value}</span>
             </div>
           );
@@ -72,7 +88,9 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
       {extractedData.map((item: any, idx: number) => (
         <li key={idx}>
           {item.fields.map((field: any, fidx: number) => (
-            <span key={fidx}>{field.label}: <span className="font-mono">{field.value}</span></span>
+            <span key={fidx}>
+              {field.label}: <span className="font-mono">{field.value}</span>
+            </span>
           ))}
         </li>
       ))}
@@ -102,7 +120,7 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
     try {
       await setJobTemplate({
         name: suggestion.template_type,
-        content: JSON.stringify(content),
+        content: JSON.stringify(extractedData),
         type: suggestion.template_type,
         dynamic: false,
         analyserJobId: jobId,
@@ -116,8 +134,8 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
   };
 
   return (
-    <div>
-      <div className="flex gap-2 mb-2 flex-wrap">
+    <div className="mt-6 space-y-4">
+      <div className="flex gap-2 mb-4 flex-wrap justify-center">
         {presentationSuggestions?.map((s: any, idx: number) => (
           <Button
             key={idx}
@@ -134,18 +152,30 @@ export function ExtractedDataDisplay({ extractedData, presentationSuggestions, j
         <CardHeader>
           <CardTitle>
             {`Extracted Data (${title})`}
-            <div className="text-xs font-normal mt-1 text-gray-500">{suggestion?.description}</div>
+            <div className="text-xs font-normal mt-2 text-gray-500">
+              {suggestion?.description}
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {content}
-          <div className="text-xs text-gray-400 mt-2">{suggestion?.suitability_reason}</div>
+          <div className="text-xs text-gray-400 mt-2">
+            {suggestion?.suitability_reason}
+          </div>
           {jobId && (
-            <div className="mt-4">
-              <Button onClick={handleSaveTemplate} disabled={saving}>
+            <div className="mt-4 flex justify-center">
+              <Button
+                onClick={handleSaveTemplate}
+                disabled={saving}
+                className="px-8 py-3 text-lg font-semibold rounded-lg w-full max-w-md bg-black text-white hover:bg-gray-900"
+                variant="secondary"
+                size="lg"
+              >
                 {saving ? "Saving..." : "Set as preferred template"}
               </Button>
-              {saveMsg && <div className="text-xs mt-2">{saveMsg}</div>}
+              {saveMsg && (
+                <div className="text-xs mt-2 text-center w-full">{saveMsg}</div>
+              )}
             </div>
           )}
         </CardContent>
