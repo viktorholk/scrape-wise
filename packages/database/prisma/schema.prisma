@@ -37,7 +37,8 @@ model User {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   crawlerJobs CrawlerJob[]
-  analyserJobs AnalyserJob[] 
+  analyserJobs AnalyserJob[]
+  templates     Template[]
 }
 
 model CrawlerJob {
@@ -63,8 +64,7 @@ model AnalyserJob {
   user       User             @relation(fields: [userId], references: [id])
   crawlerJobId     Int
   crawlerJob       CrawlerJob @relation(fields: [crawlerJobId], references: [id]) 
-  templateId   Int?         @unique
-  template     Template?    @relation(fields: [templateId], references: [id])
+  template     Template?   
 
   prompt String
 
@@ -82,8 +82,12 @@ model Template {
   content      String
   type         TemplateType @default(TABLE)
   dynamic      Boolean
+  index        Int?
 
-  analyserJob  AnalyserJob?
+  analyserJobId   Int         @unique
+  analyserJob     AnalyserJob    @relation(fields: [analyserJobId], references: [id])
+  userId          Int     @unique
+  user            User    @relation(fields: [userId], references: [id])
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
