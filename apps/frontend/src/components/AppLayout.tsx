@@ -193,14 +193,14 @@ export function AppLayout() {
       title: "dashboard",
       items: [
         {
-          title: "dashboard",
-          url: "/dashboard",
-          icon: Gauge, // Changed from LayoutGrid to Gauge
+          title: "Tracker",
+          url: "/tracker",
+          icon: Gauge, 
         },
         {
-          title: "Analysere",
-          url: "/analysere",
-          icon: Search, // Changed from LayoutGrid to Search
+          title: "Analyze",
+          url: "/analyze",
+          icon: Search, 
         },
         {
           title: "Jobs",

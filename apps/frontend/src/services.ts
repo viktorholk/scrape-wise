@@ -15,9 +15,11 @@ export function getAuthToken(): string | null {
  * Sends a POST request to the /crawler endpoint to add a scrape job.
  * @param url - The URL to scrape.
  * @param prompt - The extraction prompt.
+ * @param depth - The crawl depth.
+ * @param limit - The page limit.
  * @returns The response data from the server.
  */
-export async function addScrapeJob(url: string, prompt: string) {
+export async function addScrapeJob(url: string, prompt: string, depth: number, limit: number) {
   const token = getAuthToken();
   if (!token) {
     throw new Error('Authentication token not found');
@@ -29,7 +31,7 @@ export async function addScrapeJob(url: string, prompt: string) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
     },
-    body: JSON.stringify({ url, prompt }),
+    body: JSON.stringify({ url, prompt, depth, limit }),
   });
 
   if (!response.ok) {
