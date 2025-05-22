@@ -88,6 +88,50 @@ router.post(
   })
 );
 
+// Create a new template with an index
+router.post(
+  '/with-index',
+  authMiddleware,
+  requestHandler(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.userId;
+    const { name, content, type, dynamic, analyserJobId, index } = req.body;
+
+    if (!name || !content || index == null) {
+      throw new BadRequestError("Name, content, and index are required");
+    }
+
+    // Ensure user exists
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestError("User not found");
+
+    // Optionally validate that the analyserJob belongs to the user
+    let analyserJobConnect = undefined;
+    if (analyserJobId) {
+      const analyserJob = await prisma.analyserJob.findUnique({
+        where: { id: analyserJobId },
+      });
+      if (!analyserJob || analyserJob.userId !== userId) {
+        throw new BadRequestError("Invalid analyserJobId");
+      }
+      analyserJobConnect = { connect: { id: analyserJobId } };
+    }
+
+    const template = await prisma.template.create({
+      data: {
+        name,
+        content,
+        type,
+        dynamic,
+        index,
+        user: { connect: { id: userId } }, // Connect the user
+        ...(analyserJobConnect && { analyserJob: analyserJobConnect }),
+      },
+    });
+
+    res.status(201).json(template);
+  })
+);
+
 // Get a specific template by ID (only if it belongs to the user)
 router.get(
   '/:id',
@@ -108,5 +152,30 @@ router.get(
     res.status(200).json(template);
   })
 );
+
+// Get all templates for the authenticated user where index is not null
+router.get(
+  '/dashboard',
+  authMiddleware,
+  requestHandler(async (req: Request, res: Response): Promise<void> => {
+    const userId = req.userId;
+    if (!userId) throw new BadRequestError("No user found");
+
+    const templates = await prisma.template.findMany({
+      where: {
+        analyserJob: {
+          userId: userId,
+        },
+        index: {
+          not: null,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({ templates });
+  })
+);
+
 
 export default router;
