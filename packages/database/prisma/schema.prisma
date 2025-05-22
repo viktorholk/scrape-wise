@@ -20,12 +20,6 @@ enum JobStatus {
   ERROR
 }
 
-enum TemplateType {
-  TABLE
-  BAR_CHART
-  LIST_VIEW
-}
-
 model User {
   id        Int     @id @default(autoincrement())
   email     String  @unique
@@ -34,63 +28,73 @@ model User {
 
   password String
 
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  crawlerJobs CrawlerJob[]
-  analyserJobs AnalyserJob[]
-  templates     Template[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  crawlerJobs      CrawlerJob[]
+  analyserJobs     AnalyserJob[]
+  cheduledAnalysis ScheduledAnalysis[]
 }
 
 model CrawlerJob {
-  id         Int              @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   userId     Int
-  user       User             @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   initialUrl String
   crawlDepth Int
   pageLimit  Int
   status     JobStatus @default(STARTED)
-  pages Json?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  pages      Json?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  analyserJobs AnalyserJob[]
+  analyserJobs      AnalyserJob[]
+  scheduledAnalysis ScheduledAnalysis[]
 
   @@index([userId])
 }
 
 model AnalyserJob {
-  id         Int              @id @default(autoincrement())
-  userId     Int
-  user       User             @relation(fields: [userId], references: [id])
-  crawlerJobId     Int
-  crawlerJob       CrawlerJob @relation(fields: [crawlerJobId], references: [id]) 
-  template     Template?   
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  user         User       @relation(fields: [userId], references: [id])
+  crawlerJobId Int
+  crawlerJob   CrawlerJob @relation(fields: [crawlerJobId], references: [id])
 
   prompt String
 
-  status     JobStatus @default(STARTED)
-  results    Json?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  status            JobStatus          @default(STARTED)
+  results           Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  scheduledAnalysis ScheduledAnalysis[]
+
+
 
   @@index([userId])
 }
 
-model Template {
-  id           Int          @id @default(autoincrement())
-  name         String
-  content      String
-  type         TemplateType @default(TABLE)
-  dynamic      Boolean
-  index        Int?
+model ScheduledAnalysis {
+  id    Int    @id @default(autoincrement())
+  name  String
+  enabled Boolean
+  index Int?
 
-  analyserJobId   Int         @unique
-  analyserJob     AnalyserJob    @relation(fields: [analyserJobId], references: [id])
-  userId          Int     @unique
-  user            User    @relation(fields: [userId], references: [id])
+  crawlerJobId  Int
+  crawlerJob    CrawlerJob  @relation(fields: [crawlerJobId], references: [id])
+  analyserJobId Int        
+  analyserJob   AnalyserJob @relation(fields: [analyserJobId], references: [id])
 
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  prompt String
+
+  cronExpression String
+  lastRun DateTime?
+  nextRun DateTime?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Recipe {
@@ -102,11 +106,10 @@ model Recipe {
   prepTimeMinutes Int?
   cookTimeMinutes Int?
   servings        Int?
-  ingredients     Json // Store as { "name": "flour", "quantity": 2, "unit": "cups" }
+  ingredients     Json
   instructions    String[]
   notes           String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
