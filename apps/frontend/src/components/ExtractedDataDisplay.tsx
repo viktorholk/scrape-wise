@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { setJobTemplate } from "@/services";
-import { BarChart3, TableIcon, ListChecks, Info, Check } from "lucide-react";
+import {Info, Check } from "lucide-react";
 
 type ExtractedDataDisplayProps = {
   extractedData: any[];
@@ -18,7 +17,6 @@ export function ExtractedDataDisplay({
   jobId,
   analyserPrompt,
 }: ExtractedDataDisplayProps) {
-  const [selectedIdx, setSelectedIdx] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
@@ -43,14 +41,7 @@ export function ExtractedDataDisplay({
     );
   }
 
-  const getTemplateIcon = (templateType: string) => {
-    if (templateType === "TABLE") return <TableIcon className="h-4 w-4 mr-2" />;
-    if (templateType === "BAR_CHART") return <BarChart3 className="h-4 w-4 mr-2" />;
-    if (templateType === "LIST_VIEW") return <ListChecks className="h-4 w-4 mr-2" />;
-    return <Info className="h-4 w-4 mr-2" />;
-  };
-
-  // Helper renderers for each template type
+  // Helper renderer for table
   const renderTable = () => {
     const headers = extractedData[0]?.fields.map((f: any) => f.label);
     return (
@@ -84,62 +75,13 @@ export function ExtractedDataDisplay({
     );
   };
 
-  const renderBarChart = () => {
-    const max = Math.max(
-      ...extractedData.map((item: any) => item.fields[0].value)
-    );
-    return (
-      <div className="space-y-1">
-        {extractedData.map((item: any, idx: number) => {
-          const value = item.fields[0].value;
-          return (
-            <div key={idx} className="flex items-center">
-              <Label className="w-12 text-xs mr-2">#{idx + 1}</Label>
-              <div
-                className="bg-blue-500 h-4 rounded"
-                style={{ width: `${(value / max) * 200}px` }}
-              />
-              <span className="ml-2 font-mono text-xs">{value}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderListView = () => (
-    <ul className="list-disc ml-6 text-xs">
-      {extractedData.map((item: any, idx: number) => (
-        <li key={idx}>
-          {item.fields.map((field: any, fidx: number) => (
-            <span key={fidx}>
-              {field.label}: <span className="font-mono">{field.value}</span>
-            </span>
-          ))}
-        </li>
-      ))}
-    </ul>
-  );
-
-  // Render the selected template
-  const suggestion = presentationSuggestions?.[selectedIdx];
-  let content = null;
-  let title = "";
-  if (suggestion?.template_type === "TABLE") {
-    content = renderTable();
-    title = "Table";
-  } else if (suggestion?.template_type === "BAR_CHART") {
-    content = renderBarChart();
-    title = "Bar Chart";
-  } else {
-    content = renderListView();
-    title = "List View";
-  }
+  // Always use the first suggestion (assumed to be TABLE)
+  const suggestion = presentationSuggestions?.[0];
+  let content = renderTable();
 
   // Handle save template
   const handleSaveTemplate = async () => {
-    if (!jobId || !presentationSuggestions?.[selectedIdx]) return;
-    const suggestion = presentationSuggestions[selectedIdx];
+    if (!jobId || !suggestion) return;
     setSaving(true);
     setSaveMsg(null);
     setShowSaveConfirmation(false);
@@ -170,20 +112,6 @@ export function ExtractedDataDisplay({
               <Info className="h-5 w-5 mr-3 text-blue-500" />
               Analysis Results
             </CardTitle>
-            <div className="flex gap-2 flex-wrap">
-              {presentationSuggestions?.map((s: any, idx: number) => (
-                <Button
-                  key={idx}
-                  size="sm"
-                  variant={selectedIdx === idx ? "default" : "outline"}
-                  onClick={() => setSelectedIdx(idx)}
-                  className="text-xs px-3 py-1.5 h-auto flex items-center whitespace-nowrap"
-                >
-                  {getTemplateIcon(s.template_type)}
-                  {s.template_type.replace("_", " ")}
-                </Button>
-              ))}
-            </div>
           </div>
            {analyserPrompt && (
             <p className="text-sm mt-3 text-muted-foreground">

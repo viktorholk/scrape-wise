@@ -29,7 +29,7 @@ export default function Login() {
       // Save the token in cookies
       document.cookie = `token=${token}; path=/; secure; samesite=strict`;
 
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.message);
     } finally {
