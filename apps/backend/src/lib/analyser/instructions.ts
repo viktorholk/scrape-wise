@@ -63,55 +63,46 @@ You will be given:
 **Data Extraction Process:**
 *   Carefully analyze the user's request to understand precisely what pieces of information they are looking for.
 *   For each distinct item or entity found based on the user's request, identify its key fields.
-*   Structure the extracted data as a JSON ARRAY. Each element in this top-level array represents one distinct item/entity found.
-*   Each item/entity (element in the top-level array) MUST be an array of field objects.
+*   Each item/entity (element in the array associated with "extracted_data_collection") MUST be an array of field objects.
 *   Each field object within this item/entity array MUST have two keys:
     *   "label": A human-readable string describing the field (e.g., "Product Name", "Rating", "Author").
     *   "value": The actual extracted data for that field. **This value MUST be a string, a number, or a boolean.** Do not use complex objects or arrays for this value.
 *   The first field object in an item/entity array should generally represent the primary identifier or main piece of information for that item.
 
-    Example of one item/entity (an element in the top-level JSON array) if the user asked for "recipe names, their ratings, and number of ratings":
+**Output Format:**
+
+Please provide your entire response as a single JSON OBJECT with ONE top-level key: "extracted_data_collection".
+The value of "extracted_data_collection" MUST be a JSON ARRAY.
+Each element in this array should be an array of field objects, as described above (representing one extracted item/entity).
+
+Example (for user request: "Extract recipe names, their ratings, and number of ratings"):
+\`\`\`json
+{
+  "extracted_data_collection": [
     [
       { "label": "Recipe Name", "value": "Easy Chicken Curry" },
       { "label": "Rating (out of 5)", "value": 4.5 },
       { "label": "Number of Reviews", "value": 307 }
-    ]
-    
-    Another example, if the user asked for "book titles and authors" for a single book found:
+    ],
     [
-      { "label": "Book Title", "value": "The Great Gatsby" },
-      { "label": "Author", "value": "F. Scott Fitzgerald" }
+      { "label": "Recipe Name", "value": "Spaghetti Bolognese" },
+      { "label": "Rating (out of 5)", "value": 4.8 },
+      { "label": "Number of Reviews", "value": 512 }
     ]
-
-**Output Format:**
-
-Please provide your entire response as a single JSON ARRAY.
-Each element in this array should be an array of field objects, as described above (representing one extracted item/entity).
-
-Example (for user request: "Extract recipe names, their ratings, and number of ratings"):
-[
-  [
-    { "label": "Recipe Name", "value": "Easy Chicken Curry" },
-    { "label": "Rating (out of 5)", "value": 4.5 },
-    { "label": "Number of Reviews", "value": 307 }
-  ],
-  [
-    { "label": "Recipe Name", "value": "Spaghetti Bolognese" },
-    { "label": "Rating (out of 5)", "value": 4.8 },
-    { "label": "Number of Reviews", "value": 512 }
   ]
-]
+}
+\`\`\`
 
-If no data is found matching the request, return an empty array: \`[]\`.
+If no data is found matching the request, the value for "extracted_data_collection" MUST be an empty array: \`{"extracted_data_collection": []}\`.
 `;
 
 export function createPageAnalysisPrompt(userExtractionRequest: string, pages: ScrapedPageData[]): string {
-    const pageContents = pages.map(page => `
+  const pageContents = pages.map(page => `
 ---BEGIN TEXT CONTENT FROM ${page.url}---
 ${(page.textContent || "").replace(/`/g, "'")}
 ---END TEXT CONTENT FROM ${page.url}---`).join('\n\n');
 
-    return `
+  return `
 **Input for Analysis:**
 
 ${pageContents}
@@ -125,12 +116,12 @@ ${userExtractionRequest.replace(/`/g, "'")}
 }
 
 export function createRelevanceCheckPrompt(userExtractionRequest: string, pages: ScrapedPageData[]): string {
-    const pageContents = pages.map(page => `
+  const pageContents = pages.map(page => `
 ---BEGIN PAGE URL: ${page.url}---
 ${(page.textContent || "").replace(/`/g, "'")}
 ---END PAGE URL: ${page.url}---`).join('\n\n');
 
-    return `
+  return `
 **User's Data Extraction Request:**
 ${userExtractionRequest.replace(/`/g, "'")}
 

@@ -21,10 +21,6 @@ interface CreateCrawlerJobQuery {
   analyse?: 'true' | 'false' | string; 
 }
 
-interface AnalyseCrawlerJobParams {
-  id: string;
-}
-
 interface AnalyseCrawlerJobBody {
   prompt?: string;
 }

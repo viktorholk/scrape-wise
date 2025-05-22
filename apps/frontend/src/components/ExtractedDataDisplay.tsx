@@ -1,30 +1,17 @@
-import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { setJobTemplate } from "@/services";
-import {Info, Check } from "lucide-react";
+import { Info } from "lucide-react";
+import type { ExtractedField } from "../pages/Analyze";
 
 type ExtractedDataDisplayProps = {
-  extractedData: any[];
-  presentationSuggestions: any[];
-  jobId?: number;
+  extractedData: ExtractedField[][];
   analyserPrompt?: string;
 };
 
 export function ExtractedDataDisplay({
   extractedData,
-  presentationSuggestions,
-  jobId,
   analyserPrompt,
 }: ExtractedDataDisplayProps) {
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-
-  // Log the jobId for debugging
-  console.log("ExtractedDataDisplay jobId:", jobId);
-
-  if (!extractedData || extractedData.length === 0) {
+  if (!extractedData || extractedData.length === 0 || extractedData.every(item => item.length === 0)) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -34,16 +21,19 @@ export function ExtractedDataDisplay({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No data was extracted based on the provided prompt.</p>
+          <p className="text-muted-foreground">No data was extracted based on the provided prompt, or the extracted data is empty.</p>
           {analyserPrompt && <p className="text-sm mt-2">Prompt: <i className="text-muted-foreground">{analyserPrompt}</i></p>}
         </CardContent>
       </Card>
     );
   }
 
-  // Helper renderer for table
   const renderTable = () => {
-    const headers = extractedData[0]?.fields.map((f: any) => f.label);
+    if (!extractedData[0] || extractedData[0].length === 0) {
+      return <p className="text-muted-foreground">Extracted data is in an unexpected format.</p>;
+    }
+    const headers = extractedData[0].map((field: ExtractedField) => field.label);
+    
     return (
       <div className="overflow-x-auto">
         <table className="min-w-full text-xs border">
@@ -60,11 +50,11 @@ export function ExtractedDataDisplay({
             </tr>
           </thead>
           <tbody>
-            {extractedData.map((item: any, idx: number) => (
+            {extractedData.map((item: ExtractedField[], idx: number) => (
               <tr key={idx}>
-                {item.fields.map((field: any, fidx: number) => (
+                {item.map((field: ExtractedField, fidx: number) => (
                   <td key={fidx} className="border px-2 py-1">
-                    {field.value}
+                    {String(field.value)}
                   </td>
                 ))}
               </tr>
@@ -73,34 +63,6 @@ export function ExtractedDataDisplay({
         </table>
       </div>
     );
-  };
-
-  // Always use the first suggestion (assumed to be TABLE)
-  const suggestion = presentationSuggestions?.[0];
-  let content = renderTable();
-
-  // Handle save template
-  const handleSaveTemplate = async () => {
-    if (!jobId || !suggestion) return;
-    setSaving(true);
-    setSaveMsg(null);
-    setShowSaveConfirmation(false);
-    try {
-      await setJobTemplate({
-        name: suggestion.template_type,
-        content: JSON.stringify(extractedData),
-        type: suggestion.template_type,
-        dynamic: false,
-        analyserJobId: jobId,
-      });
-      setSaveMsg("Preferred presentation template saved!");
-      setShowSaveConfirmation(true);
-      setTimeout(() => setShowSaveConfirmation(false), 3000); // Hide after 3 seconds
-    } catch (e: any) {
-      setSaveMsg(e.message || "Failed to save template");
-    } finally {
-      setSaving(false);
-    }
   };
 
   return (
@@ -120,45 +82,9 @@ export function ExtractedDataDisplay({
           )}
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {suggestion?.description}
-          </div>
           <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/30 min-h-[200px]">
-            {content}
+            {renderTable()}
           </div>
-          <div className="text-xs text-muted-foreground italic mt-1">
-            {suggestion?.suitability_reason}
-          </div>
-
-          {jobId && suggestion && (
-            <div className="mt-6 flex flex-col items-center">
-              <Button
-                onClick={handleSaveTemplate}
-                disabled={saving || showSaveConfirmation}
-                variant="outline"
-                size="sm"
-                className="flex items-center"
-              >
-                {saving ? (
-                  <Info className="h-4 w-4 mr-2 animate-spin" />
-                ) : showSaveConfirmation ? (
-                  <Check className="h-4 w-4 mr-2 text-green-500" />
-                ) : (
-                  <Check className="h-4 w-4 mr-2" />
-                )}
-                {saving
-                  ? "Saving..."
-                  : showSaveConfirmation
-                  ? "Preference Saved"
-                  : "Set as Preferred Template"}
-              </Button>
-              {saveMsg && !showSaveConfirmation && (
-                <div className={`text-xs mt-2 text-center ${saveMsg.includes("Failed") ? "text-red-500" : "text-green-500"}`}>
-                  {saveMsg}
-                </div>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

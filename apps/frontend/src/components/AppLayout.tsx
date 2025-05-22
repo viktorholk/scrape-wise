@@ -1,5 +1,5 @@
 import * as React from "react";
-import { LayoutGrid, Gauge, Search, List, MoreVerticalIcon, UserIcon } from "lucide-react";
+import {  Gauge, Search, List, MoreVerticalIcon, UserIcon, BrainCircuit } from "lucide-react";
 
 import {
   Sidebar,
@@ -70,7 +70,7 @@ function SidebarLayout({
               <Link to="/">
                 <div className="flex items-center gap-3">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <LayoutGrid className="size-4" />
+                    <BrainCircuit className="size-4" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
                     <span className="text-sm font-semibold">Scrape Wise</span>
@@ -193,14 +193,14 @@ export function AppLayout() {
       title: "dashboard",
       items: [
         {
-          title: "Tracker",
-          url: "/tracker",
-          icon: Gauge, 
-        },
-        {
           title: "Analyze",
           url: "/analyze",
           icon: Search, 
+        },
+        {
+          title: "Scheduled Jobs",
+          url: "/scheduled-jobs",
+          icon: Gauge, 
         },
         {
           title: "Jobs",

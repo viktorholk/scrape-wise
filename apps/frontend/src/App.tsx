@@ -12,7 +12,7 @@ import Analyze from "./pages/Analyze";
 import Settings from "./pages/Settings";
 import RootLayout from "./components/RootLayout";
 import Intro from "./pages/Intro";
-import Tracker from "./pages/Tracker";
+import ScheduledJobs from "./pages/ScheduledJobs";
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
         <Route path="/" element={<RootLayout />}>
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Intro />} /> 
-            <Route path="tracker" element={<Tracker/>} />
+            <Route path="scheduled-jobs" element={<ScheduledJobs/>} />
             <Route path="analyze" element={<Analyze/>} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="settings" element={<Settings />} />

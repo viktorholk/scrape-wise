@@ -71,8 +71,19 @@ export default function Jobs() {
   }
 
   return (
-    <div className="text-gray-900 dark:text-gray-100 flex flex-row p-4">
+
+
+    <div>
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold tracking-tight">Jobs</h2>
+        <p className="text-muted-foreground">
+          View and manage your jobs.
+        </p>
+      </div>
+      <div className="text-gray-900 dark:text-gray-100 flex flex-row p-4">
       {/* Left Side: Table */}
+
+
       <div className="w-1/2 pr-4">
         <Card className="shadow-md dark:bg-gray-850 w-full">
           <CardHeader>
@@ -269,5 +280,7 @@ export default function Jobs() {
         )}
       </div>
     </div>
+    </div>
+
   );
 }

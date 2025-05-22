@@ -20,9 +20,13 @@ const fieldSchema = z.object({
     value: z.union([z.string(), z.number(), z.boolean()]),
 });
 
-const analyseOutputSchema = z.array(z.array(fieldSchema));
+const analyseResultSchemaInternal = z.array(z.array(fieldSchema));
 
-export type AnalysisResult = z.infer<typeof analyseOutputSchema>;
+const analyseOutputSchemaForOpenAI = z.object({
+    extracted_data_collection: analyseResultSchemaInternal 
+});
+
+export type AnalysisResult = z.infer<typeof analyseResultSchemaInternal>;
 
 export async function createAnalyseJob(
     userId: number, 
@@ -60,7 +64,7 @@ export async function createAnalyseJob(
         }
     });
 
-    const result = await analyseResults(userId, job.id, prompt, pages);
+    const result: AnalysisResult = await analyseResults(userId, job.id, prompt, pages);
   
     const updatedJob = await prisma.analyserJob.update({
       where: { id: job.id },
@@ -165,7 +169,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
             }
         ],
         text: {
-            format: zodTextFormat(analyseOutputSchema, "output") 
+            format: zodTextFormat(analyseOutputSchemaForOpenAI, "output") 
         }
     });
 
@@ -177,16 +181,18 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
 
     try {
         const parsedAnalysisOutput = JSON.parse(analysisOutputText);
-        const validatedAnalysisOutput = analyseOutputSchema.parse(parsedAnalysisOutput);
+        const validatedOpenAIResponse = analyseOutputSchemaForOpenAI.parse(parsedAnalysisOutput);
+
+        const actualExtractedData: AnalysisResult = validatedOpenAIResponse.extracted_data_collection;
 
         sendWsMessageToUser(userId, {
             type: "analyser_job_analysis_finished",
             jobId,
-            data: validatedAnalysisOutput
+            data: actualExtractedData 
         });
     
-        console.log("Main analysis output:", JSON.stringify(validatedAnalysisOutput, null, 2));
-        return validatedAnalysisOutput;
+        console.log("Main analysis output (after extraction):", JSON.stringify(actualExtractedData, null, 2));
+        return actualExtractedData; 
     } catch (error) {
         console.error("Error parsing main analysis output:", error);
         throw new Error("Invalid JSON received from OpenAI for main analysis");
