@@ -160,12 +160,10 @@ function SidebarLayout({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild>
                     <Link to="/settings">
                       <span>Settings</span>
                     </Link>
-                  </DropdownMenuItem>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <LogoutButton />

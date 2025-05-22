@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { setJobTemplate } from "@/services";
-import {Info, Check } from "lucide-react";
+import { setScheduledAnalysis } from "@/services";
+import { Info, Check } from "lucide-react";
 
 type ExtractedDataDisplayProps = {
   extractedData: any[];
@@ -79,25 +79,24 @@ export function ExtractedDataDisplay({
   const suggestion = presentationSuggestions?.[0];
   let content = renderTable();
 
-  // Handle save template
-  const handleSaveTemplate = async () => {
+  // Handle save scheduled analysis (was: save template)
+  const handleSaveScheduledAnalysis = async () => {
     if (!jobId || !suggestion) return;
     setSaving(true);
     setSaveMsg(null);
     setShowSaveConfirmation(false);
     try {
-      await setJobTemplate({
+      await setScheduledAnalysis({
         name: suggestion.template_type,
-        content: JSON.stringify(extractedData),
-        type: suggestion.template_type,
-        dynamic: false,
+        cronExpression: "* * * * *", // You may want to adjust this
         analyserJobId: jobId,
+        crawlerJobId: jobId, // You may want to adjust this
       });
-      setSaveMsg("Preferred presentation template saved!");
+      setSaveMsg("Preferred scheduled analysis saved!");
       setShowSaveConfirmation(true);
       setTimeout(() => setShowSaveConfirmation(false), 3000); // Hide after 3 seconds
     } catch (e: any) {
-      setSaveMsg(e.message || "Failed to save template");
+      setSaveMsg(e.message || "Failed to save scheduled analysis");
     } finally {
       setSaving(false);
     }
@@ -133,7 +132,7 @@ export function ExtractedDataDisplay({
           {jobId && suggestion && (
             <div className="mt-6 flex flex-col items-center">
               <Button
-                onClick={handleSaveTemplate}
+                onClick={handleSaveScheduledAnalysis}
                 disabled={saving || showSaveConfirmation}
                 variant="outline"
                 size="sm"
@@ -150,7 +149,7 @@ export function ExtractedDataDisplay({
                   ? "Saving..."
                   : showSaveConfirmation
                   ? "Preference Saved"
-                  : "Set as Preferred Template"}
+                  : "Set as Preferred Scheduled Analysis"}
               </Button>
               {saveMsg && !showSaveConfirmation && (
                 <div className={`text-xs mt-2 text-center ${saveMsg.includes("Failed") ? "text-red-500" : "text-green-500"}`}>

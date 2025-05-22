@@ -227,52 +227,49 @@ export function isTokenExpired(token: string | null): boolean {
 }
 
 /**
- * Creates a new template and links it to an analyser job.
- * @param template - The template data including analyserJobId.
- * @returns The created template from the server.
+ * Creates a new scheduled analysis and links it to an analyser job.
+ * @param scheduledAnalysis - The data including analyserJobId.
+ * @returns The created scheduled analysis from the server.
  */
-export async function setJobTemplate(template: {
+export async function setScheduledAnalysis(scheduledAnalysis: {
   name: string;
-  content: string;
-  type: string;
-  dynamic: boolean;
+  cronExpression: string;
   analyserJobId: number;
+  crawlerJobId: number;
 }) {
   const token = getAuthToken();
   if (!token) {
     throw new Error('Authentication token not found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/templates`, {
+  const response = await fetch(`${API_BASE_URL}/scheduled-analysis`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify(template),
+    body: JSON.stringify(scheduledAnalysis),
   });
 
   if (!response.ok) {
     const { message } = await response.json();
-    throw new Error(message || 'Failed to create template');
+    throw new Error(message || 'Failed to create scheduled analysis');
   }
 
   return response.json();
 }
 
 /**
- * Retrieves all templates for the authenticated user with pagination.
- * @param page - The page number (default 1)
- * @param limit - The number of templates per page (default 10)
- * @returns The paginated templates response from the server.
+ * Retrieves all scheduled analyses for the authenticated user.
+ * @returns The scheduled analyses from the server.
  */
-export async function getTemplates(page = 1, limit = 10) {
+export async function getScheduledAnalysis() {
   const token = getAuthToken();
   if (!token) {
     throw new Error('Authentication token not found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/templates?page=${page}&limit=${limit}`, {
+  const response = await fetch(`${API_BASE_URL}/scheduled-analysis`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -282,7 +279,7 @@ export async function getTemplates(page = 1, limit = 10) {
 
   if (!response.ok) {
     const { message } = await response.json();
-    throw new Error(message || 'Failed to fetch templates');
+    throw new Error(message || 'Failed to fetch scheduled analyses');
   }
 
   return response.json();

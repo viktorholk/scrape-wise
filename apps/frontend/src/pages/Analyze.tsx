@@ -45,7 +45,7 @@ interface ExtractedDataItem {
 
 interface PresentationSuggestion {
   description: string;
-  template_type: "LIST_VIEW" | "BAR_CHART" | "TABLE";
+  template_type: "TABLE";
   suitability_reason: string;
 }
 
