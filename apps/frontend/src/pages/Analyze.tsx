@@ -374,6 +374,7 @@ export default function Analyze() {
           <ExtractedDataDisplay
             extractedData={job.results.analyserJob.results}
             analyserPrompt={job.results.analyserJob.prompt}
+            jobId={job.results.crawlerJob.id}
           />
         )}
 

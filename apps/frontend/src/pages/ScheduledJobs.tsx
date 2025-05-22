@@ -1,58 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { getTemplates } from '../services';
+import { getScheduledAnalysis } from '../services';
 import { ExtractedDataDisplay } from '../components/ExtractedDataDisplay';
 
+const GRID_ROWS = 2;
+const GRID_COLS = 3;
+const GRID_SIZE = GRID_ROWS * GRID_COLS;
+
 const Tracker: React.FC = () => {
-  const squares = Array.from({ length: 6 });
+  // Each grid cell can have a scheduled analysis or null
+  const [gridAnalysis, setGridAnalysis] = useState<(any | null)[]>(Array(GRID_SIZE).fill(null));
   const [showModal, setShowModal] = useState(false);
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [selectedBox, setSelectedBox] = useState<number | null>(null);
+  const [analyses, setAnalyses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [selectedTemplateIdx, setSelectedTemplateIdx] = useState<number | null>(null);
+  const [selectedGridIdx, setSelectedGridIdx] = useState<number | null>(null);
 
-  // Store which template is selected for each box
-  const [boxTemplates, setBoxTemplates] = useState<(any | null)[]>(Array(6).fill(null));
-
-  // Fetch templates with pagination
+  // Fetch scheduled analyses with pagination when modal opens or page changes
   useEffect(() => {
     if (showModal) {
       setLoading(true);
-      getTemplates(page, 6)
+      getScheduledAnalysis()
         .then((res) => {
-          setTemplates(res.templates);
-          setTotalPages(res.totalPages || 1);
+          setAnalyses(res.scheduledAnalysis || res); // support both array and {scheduledAnalysis}
+          setTotalPages(1); // No pagination, so just 1 page
         })
         .finally(() => setLoading(false));
     }
-  }, [showModal, page]);
+  }, [showModal]);
 
-  const handleBoxClick = (idx: number) => {
-    setSelectedBox(idx);
+  // Open modal for a specific grid cell
+  const handleAddClick = (idx: number) => {
+    setSelectedGridIdx(idx);
     setShowModal(true);
-    setPage(1); // Reset to first page when opening modal
-    setSelectedTemplateIdx(null);
+    setPage(1);
   };
 
-  // When a template is clicked in the modal, assign it to the selected box
-  const handleTemplateSelect = (tpl: any) => {
-    if (selectedBox !== null) {
-      setBoxTemplates((prev) => {
+  // Assign scheduled analysis to grid cell
+  const handleAnalysisSelect = (analysis: any) => {
+    if (selectedGridIdx !== null) {
+      setGridAnalysis((prev) => {
         const updated = [...prev];
-        updated[selectedBox] = tpl;
+        updated[selectedGridIdx] = analysis;
         return updated;
       });
     }
     setShowModal(false);
-    setSelectedBox(null);
-    setSelectedTemplateIdx(null);
+    setSelectedGridIdx(null);
   };
 
   const handleClose = () => {
     setShowModal(false);
-    setSelectedBox(null);
-    setSelectedTemplateIdx(null);
+    setSelectedGridIdx(null);
   };
 
   const handlePrevPage = () => setPage((p) => Math.max(1, p - 1));
@@ -74,14 +73,14 @@ const Tracker: React.FC = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gridTemplateRows: 'repeat(2, 1fr)',
+          gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+          gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
           gap: '24px',
           width: '75%',
           height: '100%',
         }}
       >
-        {squares.map((_, idx) => (
+        {gridAnalysis.map((analysis, idx) => (
           <div
             key={idx}
             style={{
@@ -91,7 +90,6 @@ const Tracker: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer',
               fontSize: '3rem',
               color: '#888',
               width: '100%',
@@ -99,30 +97,48 @@ const Tracker: React.FC = () => {
               boxSizing: 'border-box',
               transition: 'box-shadow 0.2s',
               overflow: 'hidden',
+              position: 'relative',
             }}
-            title="Add new job"
-            onClick={() => handleBoxClick(idx)}
           >
-            {boxTemplates[idx] ? (
+            {analysis ? (
               <ExtractedDataDisplay
                 extractedData={(() => {
                   try {
-                    return JSON.parse(boxTemplates[idx].content);
+                    return JSON.parse(analysis.content);
                   } catch {
                     return [];
                   }
                 })()}
                 presentationSuggestions={[
                   {
-                    template_type: boxTemplates[idx].type || 'TABLE',
-                    description: boxTemplates[idx].description || '',
-                    suitability_reason: boxTemplates[idx].suitability_reason || '',
+                    template_type: analysis.type || 'TABLE',
+                    description: analysis.description || '',
+                    suitability_reason: analysis.suitability_reason || '',
                   },
                 ]}
-                jobId={boxTemplates[idx].analyserJobId}
+                jobId={analysis.analyserJobId}
               />
             ) : (
-              <span style={{ fontSize: '3rem', lineHeight: 1 }}>+</span>
+              <button
+                onClick={() => handleAddClick(idx)}
+                style={{
+                  background: 'none',
+                  border: '2px dashed #bbb',
+                  borderRadius: '8px',
+                  width: '80%',
+                  height: '80%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2.5rem',
+                  color: '#bbb',
+                  cursor: 'pointer',
+                  transition: 'border 0.2s',
+                }}
+                title="Add scheduled analysis"
+              >
+                +
+              </button>
             )}
           </div>
         ))}
@@ -157,15 +173,15 @@ const Tracker: React.FC = () => {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h2 style={{ marginTop: 0 }}>Choose a template</h2>
+            <h2 style={{ marginTop: 0 }}>Choose a scheduled analysis</h2>
             {loading ? (
-              <div>Loading templates...</div>
+              <div>Loading scheduled analyses...</div>
             ) : (
               <>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {templates.map((tpl, idx) => (
+                  {analyses.map((analysis, idx) => (
                     <li
-                      key={tpl.id}
+                      key={analysis.id}
                       style={{
                         marginBottom: 24,
                         cursor: 'pointer',
@@ -175,7 +191,7 @@ const Tracker: React.FC = () => {
                         background: '#f7f7f7',
                         transition: 'background 0.2s',
                       }}
-                      onClick={() => handleTemplateSelect(tpl)}
+                      onClick={() => handleAnalysisSelect(analysis)}
                     >
                       <div
                         style={{
@@ -184,33 +200,33 @@ const Tracker: React.FC = () => {
                           fontSize: '1.1rem',
                         }}
                       >
-                        {tpl.name}
+                        {analysis.name}
                       </div>
-                      {tpl.content && (
+                      {analysis.content && (
                         <div style={{ marginTop: 8 }}>
                           <ExtractedDataDisplay
                             extractedData={(() => {
                               try {
-                                return JSON.parse(tpl.content);
+                                return JSON.parse(analysis.content);
                               } catch {
                                 return [];
                               }
                             })()}
                             presentationSuggestions={[
                               {
-                                template_type: tpl.type || 'TABLE',
-                                description: tpl.description || '',
-                                suitability_reason: tpl.suitability_reason || '',
+                                template_type: analysis.type || 'TABLE',
+                                description: analysis.description || '',
+                                suitability_reason: analysis.suitability_reason || '',
                               },
                             ]}
-                            jobId={tpl.analyserJobId}
+                            jobId={analysis.analyserJobId}
                           />
                         </div>
                       )}
                     </li>
                   ))}
-                  {templates.length === 0 && (
-                    <li style={{ color: '#888', textAlign: 'center' }}>No templates found.</li>
+                  {analyses.length === 0 && (
+                    <li style={{ color: '#888', textAlign: 'center' }}>No scheduled analyses found.</li>
                   )}
                 </ul>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
