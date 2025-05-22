@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTemplates } from '../services';
 import { ExtractedDataDisplay } from '../components/ExtractedDataDisplay';
 
-const Dashboard: React.FC = () => {
+const Tracker: React.FC = () => {
   const squares = Array.from({ length: 6 });
   const [showModal, setShowModal] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -269,4 +269,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default Tracker;
