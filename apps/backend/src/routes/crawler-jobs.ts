@@ -10,6 +10,25 @@ import { getPaginationParams, paginateResults } from "@/lib/utils/pagination";
 
 const router = Router();
 
+interface CreateCrawlerJobBody {
+  url: string;
+  prompt?: string;
+  depth?: number;
+  limit?: number;
+}
+
+interface CreateCrawlerJobQuery {
+  analyse?: 'true' | 'false' | string; 
+}
+
+interface AnalyseCrawlerJobParams {
+  id: string;
+}
+
+interface AnalyseCrawlerJobBody {
+  prompt?: string;
+}
+
 router.get('/', authMiddleware, requestHandler(async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
   const paginationParams = getPaginationParams(req.query);
@@ -48,9 +67,8 @@ router.get('/', authMiddleware, requestHandler(async (req: Request, res: Respons
 
 router.post('/', authMiddleware, requestHandler(async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
-  const { url, prompt, depth, limit } = req.body;
-
-  const { analyse } = req.query;
+  const { url, prompt, depth, limit } = req.body as CreateCrawlerJobBody;
+  const { analyse } = req.query as CreateCrawlerJobQuery;
 
   if (!url) {
     throw new BadRequestError("URL is required");
@@ -73,8 +91,12 @@ router.post('/', authMiddleware, requestHandler(async (req: Request, res: Respon
 
 router.post('/:id/analyse', authMiddleware, requestHandler(async (req: Request, res: Response): Promise<void> => {
   const userId = req.userId!;
-  const { id } = req.params;
-  const { prompt } = req.body;
+  const id = req.params.id;
+  const { prompt } = req.body as AnalyseCrawlerJobBody;
+
+  if (!id) {
+    throw new BadRequestError("AnalyserJob ID is required in path.");
+  }
 
   const analyserJob = await createAnalyseJob(userId, parseInt(id), prompt ?? "");
 

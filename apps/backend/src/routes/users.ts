@@ -6,8 +6,15 @@ import bcrypt from "bcrypt";
 
 const router = Router();
 
+interface CreateUserBody {
+  email?: string;
+  password?: string;
+  firstname?: string;
+  lastname?: string;
+}
+
 router.post('/', requestHandler(async (req: Request, res: Response): Promise<void> => {
-    const { email, password, firstname, lastname } = req.body;
+    const { email, password, firstname, lastname } = req.body as CreateUserBody;
 
     if (!email || !password) {
         throw new BadRequestError("Email and password are required");

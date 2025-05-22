@@ -20,24 +20,16 @@ const fieldSchema = z.object({
     value: z.union([z.string(), z.number(), z.boolean()]),
 });
 
-const extractedDataItemSchema = z.object({
-    fields: z.array(fieldSchema),
-});
-
-const analyseOutputSchema = z.object({
-    extracted_data: z.array(extractedDataItemSchema),
-    presentation_suggestions: z.array(
-        z.object({
-            template_type: z.string(),
-            description: z.string(),
-            suitability_reason: z.string(),
-        })
-    ),
-});
+const analyseOutputSchema = z.array(z.array(fieldSchema));
 
 export type AnalysisResult = z.infer<typeof analyseOutputSchema>;
 
-export async function createAnalyseJob(userId: number, crawlerJobId: number, prompt: string): Promise<AnalyserJob> {
+export async function createAnalyseJob(
+    userId: number, 
+    crawlerJobId: number, 
+    prompt: string,
+    scheduledAnalysisJobId?: number
+): Promise<AnalyserJob> {
     if (!prompt) {
         throw new Error("Prompt is required");
     }
@@ -64,6 +56,7 @@ export async function createAnalyseJob(userId: number, crawlerJobId: number, pro
             crawlerJobId,
             prompt,
             status: JobStatus.STARTED,
+            ...(scheduledAnalysisJobId && { createdByScheduledAnalysisId: scheduledAnalysisJobId })
         }
     });
 
@@ -73,14 +66,12 @@ export async function createAnalyseJob(userId: number, crawlerJobId: number, pro
       where: { id: job.id },
       data: {
         status: JobStatus.COMPLETED,
-        results: result,
+        results: result, 
       }
     });
   
     return updatedJob;
   }
-  
-
 
 export async function analyseResults(userId: number, jobId: number, prompt: string, results: ScrapedPageData[]): Promise<AnalysisResult> {
     const client = new OpenAI({
@@ -89,10 +80,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
 
     if (!results || results.length === 0) {
         console.log("No pages provided for analysis.");
-        return {
-            extracted_data: [],
-            presentation_suggestions: [],
-        };
+        return [];
     }
 
     sendWsMessageToUser(userId, {
@@ -137,10 +125,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
 
     if (!relevantPagesFromAI || relevantPagesFromAI.length === 0) {
         console.log("No relevant pages found by AI.");
-        return {
-            extracted_data: [],
-            presentation_suggestions: [],
-        };
+        return [];
     }
 
     sendWsMessageToUser(userId, {
@@ -149,23 +134,17 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
         data: relevantPagesFromAI
     });
 
-    // Filter the original ScrapedPageData results to get full data for relevant URLs
     const relevantPageURLs = new Set(relevantPagesFromAI.map(p => p.url));
     const pagesForAnalysis: ScrapedPageData[] = results.filter(p => relevantPageURLs.has(p.url));
 
     if (pagesForAnalysis.length === 0) {
         console.log("No matching pages found in original results for analysis, though AI found some relevant URLs. This might indicate an issue.");
-        return {
-            extracted_data: [],
-            presentation_suggestions: [],
-        };
+        return [];
     }
 
     console.log(`Proceeding to main analysis with ${pagesForAnalysis.length} relevant page(s).`);
 
-    // Create the prompt for the main analysis using the content of all relevant pages
     const analysisPrompt = createPageAnalysisPrompt(prompt, pagesForAnalysis);
-
 
     sendWsMessageToUser(userId, {
         type: "analyser_job_analysis_started",
@@ -186,7 +165,7 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
             }
         ],
         text: {
-            format: zodTextFormat(analyseOutputSchema, "output")
+            format: zodTextFormat(analyseOutputSchema, "output") 
         }
     });
 
@@ -206,7 +185,6 @@ export async function analyseResults(userId: number, jobId: number, prompt: stri
             data: validatedAnalysisOutput
         });
     
-
         console.log("Main analysis output:", JSON.stringify(validatedAnalysisOutput, null, 2));
         return validatedAnalysisOutput;
     } catch (error) {

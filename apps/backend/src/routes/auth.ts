@@ -7,11 +7,15 @@ import { signToken } from "@/lib/utils/jwt";
 
 const router = Router();
 
+interface LoginBody {
+  email?: string;
+  password?: string;
+}
+
 router.post(
   "/",
   requestHandler(async (req: Request, res: Response): Promise<void> => {
-    const email = req.body?.email;
-    const password = req.body?.password;
+    const { email, password } = req.body as LoginBody;
 
     if (!email || !password) {
       throw new BadRequestError("Email and password are required");

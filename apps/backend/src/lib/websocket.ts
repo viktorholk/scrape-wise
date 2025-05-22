@@ -74,7 +74,10 @@ type WsMessageType = 'crawler_job_started' |
   'analyser_job_relevance_started' |
   'analyser_job_relevance_finished' |
   'analyser_job_analysis_started' |
-  'analyser_job_analysis_finished';
+  'analyser_job_analysis_finished' |
+  'scheduled_run_started' |
+  'scheduled_run_finished' |
+  'scheduled_run_failed';
 
 interface WsMessagePayload {
   type: WsMessageType;

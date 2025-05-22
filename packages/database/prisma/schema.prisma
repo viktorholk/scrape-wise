@@ -32,7 +32,7 @@ model User {
   updatedAt        DateTime            @updatedAt
   crawlerJobs      CrawlerJob[]
   analyserJobs     AnalyserJob[]
-  cheduledAnalysis ScheduledAnalysis[]
+  scheduledAnalysisJobs ScheduledAnalysisJob[]
 }
 
 model CrawlerJob {
@@ -48,7 +48,8 @@ model CrawlerJob {
   updatedAt  DateTime  @updatedAt
 
   analyserJobs      AnalyserJob[]
-  scheduledAnalysis ScheduledAnalysis[]
+
+  templateForScheduledAnalyses ScheduledAnalysisJob[] @relation("ScheduledBasedOnCrawlerJob")
 
   @@index([userId])
 }
@@ -57,8 +58,9 @@ model AnalyserJob {
   id           Int        @id @default(autoincrement())
   userId       Int
   user         User       @relation(fields: [userId], references: [id])
-  crawlerJobId Int
-  crawlerJob   CrawlerJob @relation(fields: [crawlerJobId], references: [id])
+
+   crawlerJobId Int 
+  crawlerJob   CrawlerJob @relation(fields: [crawlerJobId], references: [id], onDelete: Cascade) 
 
   prompt String
 
@@ -66,35 +68,40 @@ model AnalyserJob {
   results           Json?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  scheduledAnalysis ScheduledAnalysis[]
 
-
+  createdByScheduledAnalysisId Int?
+  createdByScheduledAnalysis   ScheduledAnalysisJob? @relation("RunsForSchedule", fields: [createdByScheduledAnalysisId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([crawlerJobId])
+  @@index([createdByScheduledAnalysisId])
 }
 
-model ScheduledAnalysis {
+model ScheduledAnalysisJob {
   id    Int    @id @default(autoincrement())
   name  String
-  enabled Boolean
-  index Int?
+  enabled Boolean @default(true)
+  index Int? // organize in frontend
 
-  crawlerJobId  Int
-  crawlerJob    CrawlerJob  @relation(fields: [crawlerJobId], references: [id])
-  analyserJobId Int        
-  analyserJob   AnalyserJob @relation(fields: [analyserJobId], references: [id])
+  originalCrawlerJobId  Int
+  originalCrawlerJob    CrawlerJob @relation("ScheduledBasedOnCrawlerJob", fields: [originalCrawlerJobId], references: [id], onDelete: Restrict)
 
   prompt String
 
   cronExpression String
   lastRun DateTime?
   nextRun DateTime?
+  lastRunStatus JobStatus? 
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  analyserJobRuns AnalyserJob[] @relation("RunsForSchedule")
+
+  @@index([userId, enabled])
 }
 
 model Recipe {

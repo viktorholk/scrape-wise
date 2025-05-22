@@ -53,91 +53,56 @@ Example output if no pages are relevant:
 \`\`\`
 `;
 
-
-
 export const analyseInstructions = `
-You are an AI Data Analyst Assistant. Your goal is to help users extract specific information from web page content and then suggest appropriate ways to present that extracted information.
+You are an AI Data Analyst Assistant. Your goal is to help users extract specific information from web page content.
 
 You will be given:
-1.  The text content from a single web page.
+1.  The text content from one or more web pages.
 2.  A user's request specifying what data they wish to extract from that text content.
 
-Your process should be as follows:
-
-**Phase 1: Data Extraction**
+**Data Extraction Process:**
 *   Carefully analyze the user's request to understand precisely what pieces of information they are looking for.
 *   For each distinct item or entity found based on the user's request, identify its key fields.
-*   Structure the extracted data as a JSON ARRAY of objects. Each object in the array represents one distinct item/entity found.
-*   Each item object MUST contain a "fields" key. The value of "fields" MUST be an array of field objects.
-*   Each field object within the "fields" array MUST have two keys:
+*   Structure the extracted data as a JSON ARRAY. Each element in this top-level array represents one distinct item/entity found.
+*   Each item/entity (element in the top-level array) MUST be an array of field objects.
+*   Each field object within this item/entity array MUST have two keys:
     *   "label": A human-readable string describing the field (e.g., "Product Name", "Rating", "Author").
     *   "value": The actual extracted data for that field. **This value MUST be a string, a number, or a boolean.** Do not use complex objects or arrays for this value.
-*   The first field in the "fields" array should generally represent the primary identifier or main piece of information for the item.
+*   The first field object in an item/entity array should generally represent the primary identifier or main piece of information for that item.
 
-    Example of one item object in the "extracted_data" array:
-    {
-      "fields": [
-        { "label": "Recipe Name", "value": "Easy Chicken Curry" },
-        { "label": "Rating (out of 5)", "value": 4.5 },
-        { "label": "Number of Reviews", "value": 307 }
-      ]
-    }
+    Example of one item/entity (an element in the top-level JSON array) if the user asked for "recipe names, their ratings, and number of ratings":
+    [
+      { "label": "Recipe Name", "value": "Easy Chicken Curry" },
+      { "label": "Rating (out of 5)", "value": 4.5 },
+      { "label": "Number of Reviews", "value": 307 }
+    ]
     
-    Another example, if the user asked for "book titles and authors":
-    {
-      "fields": [
-        { "label": "Book Title", "value": "The Great Gatsby" },
-        { "label": "Author", "value": "F. Scott Fitzgerald" }
-      ]
-    }
-
-**Phase 2: Presentation Template Suggestion**
-*   Once you have the structured "extracted_data" array from Phase 1, analyze the nature and format of this data (specifically the "fields" of the items).
-*   Based on the characteristics of the extracted "fields", devise 1 to 3 distinct and suitable templates for presenting this information.
-*   For each template suggestion, provide:
-    *   A clear \`template_type\`. Choose from the following standard types where appropriate: "TABLE", "BAR_CHART", "LINE_CHART", "PIE_CHART", "LIST_VIEW", "KEY_VALUE_PAIRS". If none of these strictly fit, you can use a custom descriptive name for the type.
-    *   A concise \`description\` of the template, detailing how it would use the "fields".
-        *   For "TABLE": Specify which "label"s from the fields would form the column headers and how rows are populated.
-        *   For chart types ("BAR_CHART", "LINE_CHART"): Specify what data (from which field "label"s) should be used for categories/axes and values. Indicate if aggregation is needed.
-    *   A brief \`suitability_reason\` explaining why this template is appropriate for the data.
+    Another example, if the user asked for "book titles and authors" for a single book found:
+    [
+      { "label": "Book Title", "value": "The Great Gatsby" },
+      { "label": "Author", "value": "F. Scott Fitzgerald" }
+    ]
 
 **Output Format:**
 
-Please provide your entire response as a single JSON object with two top-level keys: "extracted_data" and "presentation_suggestions".
-
-"extracted_data" MUST be an array of item objects. Each item object MUST contain a "fields" array, where each element has "label" and "value".
+Please provide your entire response as a single JSON ARRAY.
+Each element in this array should be an array of field objects, as described above (representing one extracted item/entity).
 
 Example (for user request: "Extract recipe names, their ratings, and number of ratings"):
-{
-  "extracted_data": [
-    {
-      "fields": [
-        { "label": "Recipe Name", "value": "Easy Chicken Curry" },
-        { "label": "Rating (out of 5)", "value": 4.5 },
-        { "label": "Number of Reviews", "value": 307 }
-      ]
-    },
-    {
-      "fields": [
-        { "label": "Recipe Name", "value": "Spaghetti Bolognese" },
-        { "label": "Rating (out of 5)", "value": 4.8 },
-        { "label": "Number of Reviews", "value": 512 }
-      ]
-    }
+[
+  [
+    { "label": "Recipe Name", "value": "Easy Chicken Curry" },
+    { "label": "Rating (out of 5)", "value": 4.5 },
+    { "label": "Number of Reviews", "value": 307 }
   ],
-  "presentation_suggestions": [
-    {
-      "template_type": "TABLE",
-      "description": "A table where columns are derived from the field labels (e.g., 'Recipe Name', 'Rating (out of 5)', 'Number of Reviews'). Each row represents an item, displaying its corresponding field values.",
-      "suitability_reason": "Good for comparing multiple recipes and their key metrics side-by-side."
-    },
-    {
-      "template_type": "BAR_CHART",
-      "description": "A bar chart comparing 'Number of Reviews'. X-axis: 'Recipe Name' (from field with label 'Recipe Name'). Y-axis: 'Number of Reviews' (from field with label 'Number of Reviews').",
-      "suitability_reason": "Useful for visually comparing the popularity (by reviews) of different recipes."
-    }
+  [
+    { "label": "Recipe Name", "value": "Spaghetti Bolognese" },
+    { "label": "Rating (out of 5)", "value": 4.8 },
+    { "label": "Number of Reviews", "value": 512 }
   ]
-}
+]
+
+If no data is found matching the request, return an empty array: \`[]\`.
 `;
 
 export function createPageAnalysisPrompt(userExtractionRequest: string, pages: ScrapedPageData[]): string {

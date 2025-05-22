@@ -7,11 +7,14 @@ dotenv.config();
 
 import routes from './routes/index';
 import { initWebSocket } from './lib/websocket';
+import { initializeSchedulers } from './lib/scheduler';
+
 const app: Application = express();
 
 const server = createServer(app);
 
 initWebSocket(server);
+initializeSchedulers();
 
 const port = process.env.PORT || 3010;
 
