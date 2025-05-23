@@ -4,6 +4,7 @@ import type { ExtractedField } from "../pages/Analyze";
 import { useState } from "react";
 import { setScheduledAnalysis } from "@/services";
 import { Button } from "./ui/button";
+import { DataTable } from "./DataTable";
 
 type ExtractedDataDisplayProps = {
   extractedData: ExtractedField[][];
@@ -37,44 +38,6 @@ export function ExtractedDataDisplay({
       </Card>
     );
   }
-
-  const renderTable = () => {
-    if (!extractedData[0] || extractedData[0].length === 0) {
-      return <p className="text-muted-foreground">Extracted data is in an unexpected format.</p>;
-    }
-    const headers = extractedData[0].map((field: ExtractedField) => field.label);
-    
-    return (
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-xs border">
-          <thead>
-            <tr>
-              {headers.map((label: string, idx: number) => (
-                <th
-                  key={idx}
-                  className="border px-2 py-1 text-left bg-gray-100 dark:bg-gray-800"
-                >
-                  {label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {extractedData.map((item: ExtractedField[], idx: number) => (
-              <tr key={idx}>
-                {item.map((field: ExtractedField, fidx: number) => (
-                  <td key={fidx} className="border px-2 py-1">
-                    {String(field.value)}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
 
   const handleSaveScheduledAnalysis = async () => {
     if (!jobId ) return;
@@ -116,7 +79,7 @@ export function ExtractedDataDisplay({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/30 min-h-[200px]">
-            {renderTable()}
+            <DataTable data={extractedData} />
           </div>
 
           {jobId  && (

@@ -186,6 +186,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@18.3.7(@types/react@18.3.21))(@types/react@18.3.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      cronstrue:
+        specifier: ^2.61.0
+        version: 2.61.0
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
@@ -2920,6 +2923,10 @@ packages:
   cron-parser@5.2.0:
     resolution: {integrity: sha512-ED2qJtcjelmUEuoV3btwxiOm3NI8H4/eCZNX3adUkrm+/b3Xq05+YoDXyjIN57VGhskuHx/KzC367GAklo1lRg==}
     engines: {node: '>=18'}
+
+  cronstrue@2.61.0:
+    resolution: {integrity: sha512-ootN5bvXbIQI9rW94+QsXN5eROtXWwew6NkdGxIRpS/UFWRggL0G5Al7a9GTBFEsuvVhJ2K3CntIIVt7L2ILhA==}
+    hasBin: true
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -8665,6 +8672,8 @@ snapshots:
   cron-parser@5.2.0:
     dependencies:
       luxon: 3.6.1
+
+  cronstrue@2.61.0: {}
 
   cross-spawn@7.0.6:
     dependencies:

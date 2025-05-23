@@ -44,7 +44,7 @@ router.get(
           }
         }
       },
-      orderBy: { index: "desc" },
+      orderBy: { index: "asc" },
     });
     res.status(200).json(scheduledAnalysisJobs);
   })

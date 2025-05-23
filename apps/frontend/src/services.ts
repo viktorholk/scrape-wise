@@ -285,3 +285,29 @@ export async function getScheduledAnalysis() {
   return response.json();
 }
 
+/**
+ * Retrieves all analyser jobs for the authenticated user.
+ * @returns The analyser jobs from the server.
+ */
+export async function getAnalyserJobs() {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/analyser-jobs`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to fetch analyser jobs');
+  }
+
+  return response.json();
+}
+
