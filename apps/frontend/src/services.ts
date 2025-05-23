@@ -236,6 +236,7 @@ export async function setScheduledAnalysis(scheduledAnalysis: {
   cronExpression: string;
   prompt: string;
   originalCrawlerJobId: number;
+  enabled: boolean; // <-- Add this line
 }) {
   const token = getAuthToken();
   if (!token) {

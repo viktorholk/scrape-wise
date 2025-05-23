@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { loginUser } from '@/services';
+import { User2, KeyRound, LogIn, XCircle } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -39,15 +40,22 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 flex flex-col items-center justify-center p-4">
+      <div className="mb-8 flex items-center gap-4">
+        <LogIn className="h-10 w-10 text-primary" />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Login</h2>
+          <p className="text-muted-foreground">
+            Enter your credentials to access your account.
+          </p>
+        </div>
+      </div>
       <Card className="shadow-md dark:bg-gray-850 max-w-md w-full">
-        <CardHeader>
-          <CardTitle className="text-xl text-center">Login</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleFormSubmit}>
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
-                <label htmlFor="email-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="email-input" className="block text-sm font-medium flex items-center gap-1">
+                  <User2 className="h-4 w-4 text-muted-foreground" />
                   Email
                 </label>
                 <Input
@@ -59,7 +67,8 @@ export default function Login() {
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="password-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="password-input" className="block text-sm font-medium flex items-center gap-1">
+                  <KeyRound className="h-4 w-4 text-muted-foreground" />
                   Password
                 </label>
                 <Input
@@ -74,9 +83,12 @@ export default function Login() {
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
             </div>
-
             <div className='p-3 h-10'>
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              {error && (
+                <div className="flex items-center text-red-500 text-sm text-center gap-2 justify-center">
+                  <XCircle className="h-4 w-4" /> {error}
+                </div>
+              )}
             </div>
           </form>
           <p className="text-sm text-center">

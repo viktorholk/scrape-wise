@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { updateUser } from '@/services';
 import { useUser } from '@/UserContext';
+import { User2, KeyRound, CheckCircle2, XCircle } from "lucide-react";
 
 const Settings = () => {
     const { user } = useUser();
@@ -44,12 +45,24 @@ const Settings = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-start p-8 min-h-[60vh]">
+        <div className="p-4 md:p-6 flex flex-col items-center min-h-[60vh]">
+            <div className="mb-8 flex items-center gap-4">
+                <User2 className="h-10 w-10 text-primary" />
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight">User Settings</h2>
+                    <p className="text-muted-foreground">
+                        Manage your personal information and password. Changes take effect immediately.
+                    </p>
+                </div>
+            </div>
             <Card className="shadow-md dark:bg-gray-850 w-full max-w-xl">
                 <CardHeader>
-                    <CardTitle className="text-2xl text-center mb-1">User Settings</CardTitle>
-                    <CardDescription className="text-center text-gray-500 dark:text-gray-400">
-                        Update your personal information and password.
+                    <CardTitle className="text-xl flex items-center gap-2">
+                        <User2 className="h-5 w-5 text-primary" />
+                        Profile Information
+                    </CardTitle>
+                    <CardDescription className="text-gray-500 dark:text-gray-400">
+                        Update your name and password below.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -60,11 +73,20 @@ const Settings = () => {
                             handleSave();
                         }}
                     >
-                        {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-                        {success && <div className="text-green-500 text-sm text-center">{success}</div>}
+                        {error && (
+                            <div className="flex items-center text-red-500 text-sm text-center gap-2 justify-center">
+                                <XCircle className="h-4 w-4" /> {error}
+                            </div>
+                        )}
+                        {success && (
+                            <div className="flex items-center text-green-500 text-sm text-center gap-2 justify-center">
+                                <CheckCircle2 className="h-4 w-4" /> {success}
+                            </div>
+                        )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label htmlFor="first-name-input" className="block text-sm font-medium">
+                                <label htmlFor="first-name-input" className="block text-sm font-medium flex items-center gap-1">
+                                    <User2 className="h-4 w-4 text-muted-foreground" />
                                     First Name
                                 </label>
                                 <Input
@@ -77,7 +99,8 @@ const Settings = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="last-name-input" className="block text-sm font-medium">
+                                <label htmlFor="last-name-input" className="block text-sm font-medium flex items-center gap-1">
+                                    <User2 className="h-4 w-4 text-muted-foreground" />
                                     Last Name
                                 </label>
                                 <Input
@@ -92,7 +115,8 @@ const Settings = () => {
                         </div>
                         <hr className="my-2 border-gray-200 dark:border-gray-700" />
                         <div className="space-y-2">
-                            <label htmlFor="password-input" className="block text-sm font-medium">
+                            <label htmlFor="password-input" className="block text-sm font-medium flex items-center gap-1">
+                                <KeyRound className="h-4 w-4 text-muted-foreground" />
                                 New Password
                             </label>
                             <Input
@@ -105,7 +129,8 @@ const Settings = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label htmlFor="confirm-password-input" className="block text-sm font-medium">
+                            <label htmlFor="confirm-password-input" className="block text-sm font-medium flex items-center gap-1">
+                                <KeyRound className="h-4 w-4 text-muted-foreground" />
                                 Confirm New Password
                             </label>
                             <Input

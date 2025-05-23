@@ -14,7 +14,7 @@ export function CrawlerResult({ result }: CrawlerResultProps) {
   const { crawlerJob } = result;
 
   return (
-    <Card className="mt-6 w-full">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center text-xl">
           <ListTree className="h-5 w-5 mr-3 text-blue-500" />

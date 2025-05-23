@@ -20,7 +20,8 @@ export function ExtractedDataDisplay({
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
-
+  const [cronInterval, setCronInterval] = useState("*/5 * * * *");
+  const [enabled, setEnabled] = useState(true);
 
   if (!extractedData || extractedData.length === 0 || extractedData.every(item => item.length === 0)) {
     return (
@@ -47,9 +48,10 @@ export function ExtractedDataDisplay({
     try {
       await setScheduledAnalysis({
         name: "Extract Data",
-        cronExpression: "* * * * *", // You may want to adjust this
+        cronExpression: cronInterval,
         prompt: analyserPrompt || "",
         originalCrawlerJobId: jobId,
+        enabled, // Pass enabled state
       });
       setSaveMsg("Preferred scheduled analysis saved!");
       setShowSaveConfirmation(true);
@@ -84,6 +86,46 @@ export function ExtractedDataDisplay({
 
           {jobId  && (
             <div className="mt-6 flex flex-col items-center">
+              <div className="flex items-center gap-4 mb-2">
+                {/* Cron Interval Select with label and icon */}
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-blue-500"/>
+                  <label htmlFor="cron-interval" className="text-xs font-medium text-muted-foreground">
+                    Run every:
+                  </label>
+                  <select
+                    id="cron-interval"
+                    className="border rounded px-2 py-1 text-sm bg-background"
+                    value={cronInterval}
+                    onChange={e => setCronInterval(e.target.value)}
+                    disabled={saving || showSaveConfirmation}
+                  >
+                    <option value="*/5 * * * *">5 min</option>
+                    <option value="*/10 * * * *">10 min</option>
+                    <option value="0 * * * *">1 hour</option>
+                    <option value="0 0 * * *">1 day</option>
+                  </select>
+                </div>
+                {/* Enabled Toggle with label and icon */}
+                <div className="flex items-center gap-2">
+                  <Check className={`h-4 w-4 ${enabled ? "text-green-500" : "text-gray-400"}`} />
+                  <label htmlFor="enable-toggle" className="text-xs font-medium text-muted-foreground">
+                    Scheduled:
+                  </label>
+                  <Button
+                    id="enable-toggle"
+                    type="button"
+                    variant={enabled ? "default" : "outline"}
+                    size="sm"
+                    className="px-3"
+                    onClick={() => setEnabled(e => !e)}
+                    disabled={saving || showSaveConfirmation}
+                    aria-pressed={enabled}
+                  >
+                    {enabled ? "On" : "Off"}
+                  </Button>
+                </div>
+              </div>
               <Button
                 onClick={handleSaveScheduledAnalysis}
                 disabled={saving || showSaveConfirmation}
