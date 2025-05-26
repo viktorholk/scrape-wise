@@ -50,8 +50,7 @@ export function ExtractedDataDisplay({
         name: "Extract Data",
         cronExpression: cronInterval,
         prompt: analyserPrompt || "",
-        originalCrawlerJobId: jobId,
-        enabled, // Pass enabled state
+        originalAnalysisJobId: jobId,
       });
       setSaveMsg("Preferred scheduled analysis saved!");
       setShowSaveConfirmation(true);
