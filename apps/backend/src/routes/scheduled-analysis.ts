@@ -13,7 +13,7 @@ interface CreateScheduledAnalysisJobBody {
   name: string;
   cronExpression: string;
   prompt: string;
-  originalCrawlerJobId: number;
+  originalAnalysisJobId: number;
 }
 
 interface UpdateScheduledAnalysisJobBody {
@@ -58,14 +58,13 @@ router.post(
     const {
       name,
       cronExpression,
-      prompt,
-      originalCrawlerJobId
+      originalAnalysisJobId
     } = req.body as CreateScheduledAnalysisJobBody;
 
     if (!userId) throw new BadRequestError("No user found");
 
-    if (!name || !cronExpression || !prompt || typeof originalCrawlerJobId !== 'number') {
-      throw new BadRequestError("Missing required fields: name, cronExpression, prompt, originalCrawlerJobId");
+    if (!name || !cronExpression || typeof originalAnalysisJobId !== 'number') {
+      throw new BadRequestError("Missing required fields: name, cronExpression, originalAnalysisJobId");
     }
 
     try {
@@ -74,15 +73,23 @@ router.post(
       throw new BadRequestError("Invalid cronExpression format.");
     }
 
+
+    const templateAnalysisJob = await prisma.analyserJob.findUnique({
+      where: {
+        id: originalAnalysisJobId,
+        userId: userId,
+      },
+    });
+
     const templateCrawlerJob = await prisma.crawlerJob.findUnique({
       where: {
-        id: originalCrawlerJobId,
+        id: templateAnalysisJob?.crawlerJobId,
         userId: userId,
       },
     });
 
     if (!templateCrawlerJob) {
-      throw new NotFoundError(`Template CrawlerJob with ID ${originalCrawlerJobId} not found or does not belong to the user.`);
+      throw new NotFoundError(`Template CrawlerJob with ID ${templateAnalysisJob?.crawlerJobId} not found or does not belong to the user.`);
     }
 
     const count = await prisma.scheduledAnalysisJob.count({
@@ -96,7 +103,7 @@ router.post(
         name,
         cronExpression,
         enabled: true,
-        prompt,
+        prompt: templateAnalysisJob?.prompt ?? "",
         originalCrawlerJobId: templateCrawlerJob.id,
       },
     });

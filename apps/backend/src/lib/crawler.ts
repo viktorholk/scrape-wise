@@ -12,7 +12,7 @@ function normalizeHostname(hostname: string): string {
   return hostname.startsWith('www.') ? hostname.substring(4) : hostname;
 }
 
-export async function createCrawlJob(userId: number, url: string, settings: CrawlerSettings): Promise<CrawlerJob> {
+export async function createCrawlJob(userId: number, url: string, settings: CrawlerSettings, isScheduled: boolean = false): Promise<CrawlerJob> {
   const job = await prisma.crawlerJob.create({
     data: {
       userId,
@@ -23,7 +23,7 @@ export async function createCrawlJob(userId: number, url: string, settings: Craw
     }
   });
 
-  const result = await crawl(userId, job.id, url, settings);
+  const result = await crawl(userId, job.id, url, settings, isScheduled);
 
   const updatedJob = await prisma.crawlerJob.update({
     where: { id: job.id },
@@ -41,6 +41,7 @@ export async function crawl(
   jobId: number,
   initialUrlString: string,
   settings: CrawlerSettings,
+  isScheduled: boolean = false
 ): Promise<CrawlResult> {
   let initialUrlObj;
   try {
@@ -77,10 +78,12 @@ export async function crawl(
   const queue: { url: string; currentDepth: number }[] = [{ url: initialUrlString, currentDepth: 0 }];
   const scrapedData: ScrapedPageData[] = [];
 
-  sendWsMessageToUser(userId, {
-    type: "crawler_job_started",
-    jobId
-  });
+  if (!isScheduled) {
+    sendWsMessageToUser(userId, {
+      type: "crawler_job_started",
+      jobId
+    });
+  }
 
   while (queue.length > 0 && scrapedData.length < settings.limit) {
 
@@ -102,14 +105,16 @@ export async function crawl(
     let page: Page | null = null;
 
     try {
-      sendWsMessageToUser(userId, {
-        type: "crawler_job_progress",
-        jobId,
+      if (!isScheduled) {
+        sendWsMessageToUser(userId, {
+          type: "crawler_job_progress",
+          jobId,
         data: {
           url,
-          currentDepth
-        }
-      });
+            currentDepth
+          }
+        });
+      }
 
       page = await context.newPage();
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
@@ -148,14 +153,16 @@ export async function crawl(
       console.error(`Failed to process ${url}: ${error.message}`);
       scrapedData.push({ url, title: "", textContent: null, linksFound: 0, error: error.message });
 
-      sendWsMessageToUser(userId, {
-        type: "crawler_job_progress_error",
-        jobId,
+      if (!isScheduled) {
+        sendWsMessageToUser(userId, {
+          type: "crawler_job_progress_error",
+          jobId,
         data: {
           url,
           error: error.message
-        }
-      });
+          }
+        });
+      }
     } finally {
       if (page) {
         await page.close();
@@ -163,10 +170,12 @@ export async function crawl(
     }
   }
 
-  sendWsMessageToUser(userId, {
-    type: "crawler_job_finished",
-    jobId,
-  });
+  if (!isScheduled) {
+    sendWsMessageToUser(userId, {
+      type: "crawler_job_finished",
+      jobId,
+    });
+  }
 
   // cleanup
   await browser.close();

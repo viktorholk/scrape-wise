@@ -1,10 +1,8 @@
 import * as cron from 'node-cron';
 import { CronExpressionParser } from 'cron-parser';
 import { prisma, ScheduledAnalysisJob, JobStatus, CrawlerJob, AnalyserJob } from '@packages/database';
-import { sendWsMessageToUser } from './websocket';
 import { createCrawlJob } from './crawler';
 import { createAnalyseJob } from './analyser';
-import { ScrapedPageData } from '@/types';
 
 const activeCronJobs = new Map<number, cron.ScheduledTask>();
 
@@ -69,12 +67,6 @@ async function executeScheduledJobRun(scheduledJobId: number): Promise<void> {
         },
     });
 
-    sendWsMessageToUser(scheduledJob.userId, {
-        type: 'scheduled_run_started',
-        jobId: scheduledJob.id,
-        data: { scheduledAnalysisJobId: scheduledJob.id, name: scheduledJob.name, scheduledAt: new Date().toISOString() },
-    });
-
     try {
         console.log(`Invoking createCrawlJob for ScheduledAnalysisJob ID: ${scheduledJob.id}`);
         newCrawlerJob = await createCrawlJob(
@@ -83,7 +75,8 @@ async function executeScheduledJobRun(scheduledJobId: number): Promise<void> {
             {
                 depth: scheduledJob.originalCrawlerJob.crawlDepth,
                 limit: scheduledJob.originalCrawlerJob.pageLimit
-            }
+            },
+            true
         );
 
         if (!newCrawlerJob) {
@@ -114,16 +107,6 @@ async function executeScheduledJobRun(scheduledJobId: number): Promise<void> {
 
         overallRunStatus = JobStatus.COMPLETED;
         console.log(`Scheduled run for ID: ${scheduledJob.id} completed successfully.`);
-        sendWsMessageToUser(scheduledJob.userId, {
-            type: 'scheduled_run_finished',
-            jobId: scheduledJob.id,
-            data: {
-                scheduledAnalysisJobId: scheduledJob.id,
-                name: scheduledJob.name,
-                newCrawlerJobId: newCrawlerJob.id,
-                newAnalyserJobId: newAnalyserJob.id,
-            },
-        });
 
     } catch (error: any) {
         console.error(`Error during execution of ScheduledAnalysisJob ID: ${scheduledJob.id}: ${error.message}`, error);
@@ -137,12 +120,6 @@ async function executeScheduledJobRun(scheduledJobId: number): Promise<void> {
         };
         if (newCrawlerJob?.id) errorData.newCrawlerJobId = newCrawlerJob.id;
         if (newAnalyserJob?.id) errorData.newAnalyserJobId = newAnalyserJob.id;
-
-        sendWsMessageToUser(scheduledJob.userId, {
-            type: 'scheduled_run_failed',
-            jobId: scheduledJob.id,
-            data: errorData,
-        });
     } finally {
         const nextRunTime = calculateNextRunTime(scheduledJob.cronExpression);
         await prisma.scheduledAnalysisJob.update({
