@@ -57,6 +57,7 @@ interface ScrapeJobResults {
 }
 
 interface ScrapeJob {
+  id?: number;
   url: string;
   prompt: string;
   results?: ScrapeJobResults;
@@ -112,6 +113,11 @@ export default function Analyze() {
 
     ws.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
+      console.log(messageData);
+
+      if (messageData.type === "crawler_job_started") {
+        setJob(prev => prev ? { ...prev, id: messageData.jobId } : null);
+      }
       setWsMessages((prev) => [...prev, { ...messageData, timestamp: new Date().toLocaleTimeString() }]);
     };
 
@@ -128,8 +134,33 @@ export default function Analyze() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [wsMessages]);
 
+  const handleStopJobInternal = async () => {
+    setJob(prev => prev ? { ...prev, inProgress: false, error: "Job manually stopped." } : null);
+    setWsMessages(prev => [...prev, { type: "error", jobId: job?.results?.crawlerJob.id || 0, data: { error: "Job stopped by user." }, timestamp: new Date().toLocaleTimeString() }]);
+
+    if (wsRef.current) {
+      console.log(`Sending stop message to ${job?.id}_crawler_job_stop`);
+      wsRef.current.send(JSON.stringify({
+        type: `crawler_job_stop`,
+        jobId: job?.id || 0
+      }));
+
+
+      setTimeout(() => {
+        // refresh
+        window.location.reload();
+      }, 1000);
+    }
+  };
+
+
   const handleSubmit = async () => {
     if (!url) return;
+
+    if (job?.inProgress) {
+      await handleStopJobInternal();
+      return;
+    }
 
     // Set job as in progress (no results yet)
     setJob({ url, prompt, crawlDepth, pageLimit, inProgress: true });
@@ -274,12 +305,26 @@ export default function Analyze() {
 
             <Button
               onClick={handleSubmit}
-              disabled={!url || !prompt || job?.inProgress}
-              className={`${job?.inProgress ? "cursor-wait" : "cursor-pointer"}`}
+              disabled={!url || !prompt }
+              className={`group cursor-pointer w-full`}
             >
-              {job?.inProgress ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Play className="h-5 w-5 mr-2" />}
-              {job?.inProgress ? "Analyzing..." : "Analyze"}
-
+                      {job?.inProgress ? (
+                        <>
+                          <span className="flex items-center group-hover:hidden">
+                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                            Analyzing...
+                          </span>
+                          <span className="hidden items-center group-hover:flex">
+                            <XCircle className="h-5 w-5 mr-2" />
+                            Stop
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-5 w-5 mr-2" />
+                          Analyze
+                        </>
+                      )}
 
             </Button>
           </div>
@@ -419,9 +464,9 @@ export default function Analyze() {
                             analyserJob: {
                               ...(prevJob.results.analyserJob as AnalyserJob),
                               ...updatedResults,
-                              prompt: newPrompt, // Explicitly update prompt in state
-                              status: "COMPLETED", // Assume it completes, or API should return status
-                              updatedAt: new Date().toISOString(), // Reflect update time
+                              prompt: newPrompt,
+                              status: "COMPLETED", 
+                              updatedAt: new Date().toISOString(), 
                             },
                           },
                         };
@@ -430,7 +475,7 @@ export default function Analyze() {
                       setWsMessages((prev) => [
                         ...prev,
                         {
-                          type: "analyser_job_analysis_finished", // Or a new type for re-analysis
+                          type: "analyser_job_analysis_finished",
                           jobId: job.results!.analyserJob!.id,
                           data: { message: "Re-analysis complete with new prompt." },
                           timestamp: new Date().toLocaleTimeString(),

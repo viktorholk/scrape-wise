@@ -5,7 +5,7 @@ import { BadRequestError } from "@/lib/errors";
 import { requestHandler } from "@/lib/utils";
 import { authMiddleware } from "@/middlewares/auth";
 import { createAnalyseJob } from "@/lib/analyser";
-import { AnalyserJob, prisma } from "@packages/database";
+import { AnalyserJob, JobStatus, prisma } from "@packages/database";
 import { getPaginationParams, paginateResults } from "@/lib/utils/pagination";
 
 const router = Router();
@@ -74,7 +74,7 @@ router.post('/', authMiddleware, requestHandler(async (req: Request, res: Respon
 
   let analyserJobResult: AnalyserJob | null = null;
 
-  if (analyse === "true") {
+  if (analyse === "true" && crawlerJobResult.status === JobStatus.COMPLETED) {
     analyserJobResult = await createAnalyseJob(userId, crawlerJobResult.id, prompt ?? "");
   }
 
