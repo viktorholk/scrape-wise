@@ -94,7 +94,8 @@ async function executeScheduledJobRun(scheduledJobId: number): Promise<void> {
             scheduledJob.userId,
             newCrawlerJob.id,
             scheduledJob.prompt,
-            scheduledJob.id
+            scheduledJob.id,
+            true
         );
 
         if (!newAnalyserJob) {
