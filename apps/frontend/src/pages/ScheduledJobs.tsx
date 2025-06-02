@@ -12,7 +12,7 @@ import { ScheduleAnalysisForm } from '../components/ScheduleAnalysisForm';
 
 export type JobStatus = "STARTED" | "COMPLETED" | "STOPPED" | "ERROR";
 
-interface AnalyserJobRun {
+export interface AnalyserJobRun {
   id: number;
   status: JobStatus;
   results: ExtractedField[][];
@@ -301,6 +301,7 @@ export default function ScheduledJobs() {
             getStatusBadge={getStatusBadge} 
             getRunStatusIcon={getRunStatusIcon} 
             formatOptionalDate={formatOptionalDate} 
+            onChanged={handleFetchAnalyses} // <-- add this line
           />
         ))}
       </div>

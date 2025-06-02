@@ -1,18 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { CalendarClock, Eye, Settings2, PlayCircle, PauseCircle, AlertTriangle, CheckCircle, InfoIcon, Loader2 } from 'lucide-react';
 import { DataTable } from '@/components/DataTable';
-import type { ScheduledAnalysisJobDisplay, JobStatus } from '../pages/ScheduledJobs.tsx'; // Corrected path
+import type { ScheduledAnalysisJobDisplay, JobStatus } from '../pages/ScheduledJobs.tsx';
 import cronstrue from 'cronstrue';
+import { ScheduledJobHistory } from './ScheduledJobHistory';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'; // Make sure you have these
+import { ScheduledJobManageDialog } from './ScheduledJobManageDialog';
+import { updateScheduledAnalysisJob, deleteScheduledAnalysisJob } from '../services';
 
 interface ScheduledJobCardProps {
   analysis: ScheduledAnalysisJobDisplay;
   getStatusBadge: (status: ScheduledAnalysisJobDisplay['status']) => JSX.Element;
   getRunStatusIcon: (runStatus?: JobStatus | null) => JSX.Element;
   formatOptionalDate: (dateString?: string | null) => string;
+  onChanged?: () => void; // <-- add this
 }
 
 export function ScheduledJobCard({
@@ -20,9 +25,35 @@ export function ScheduledJobCard({
   getStatusBadge,
   getRunStatusIcon,
   formatOptionalDate,
+  onChanged,
 }: ScheduledJobCardProps) {
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
+  const [toggling, setToggling] = useState(false); // <-- add this
   const latestRun = analysis.analyserJobRuns?.[0];
   const latestResults = latestRun?.results || [];
+
+  // Replace these with your actual API calls
+  const handleSaveSettings = async (changes: { name: string; cronExpression: string; enabled: boolean }) => {
+    await updateScheduledAnalysisJob(analysis.id, changes);
+    onChanged?.();
+  };
+  const handleAbort = async () => {
+    await deleteScheduledAnalysisJob(analysis.id);
+    onChanged?.();
+  };
+
+  // Toggle enabled/disabled status
+  const handleToggleStatus = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setToggling(true);
+    try {
+      await updateScheduledAnalysisJob(analysis.id, { enabled: analysis.status !== "ACTIVE" });
+      onChanged?.(); // Refresh parent data
+    } finally {
+      setToggling(false);
+    }
+  };
 
   return (
     <Card key={analysis.id} className="flex flex-col h-full overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 bg-card">
@@ -32,7 +63,19 @@ export function ScheduledJobCard({
             <CalendarClock className="h-5 w-5 mr-2.5 text-primary flex-shrink-0" /> 
             <span className="truncate" title={analysis.name}>{analysis.name}</span>
           </CardTitle>
-          {getStatusBadge(analysis.status)}
+          <button
+            type="button"
+            className="focus:outline-none"
+            title={analysis.status === "ACTIVE" ? "Disable" : "Enable"}
+            onClick={handleToggleStatus}
+            disabled={toggling}
+          >
+            {toggling ? (
+              <Loader2 className="animate-spin h-5 w-5 text-muted-foreground" />
+            ) : (
+              getStatusBadge(analysis.status)
+            )}
+          </button>
         </div>
         <CardDescription className="text-xs text-muted-foreground">
           Schedule: <span className="font-mono">
@@ -85,14 +128,38 @@ export function ScheduledJobCard({
 
       <CardFooter className="pt-2.5 pb-3 border-t">
         <div className="flex justify-end w-full space-x-2">
-          <Button variant="outline" size="sm" className="text-xs px-2.5 py-1 h-auto"> 
-            <Eye className="h-3.5 w-3.5 mr-1.5" /> View History
-          </Button>
-          <Button variant="ghost" size="sm" className="text-xs px-2.5 py-1 h-auto"> 
+          {/* History Dialog */}
+          <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-xs px-2.5 py-1 h-auto">
+                <Eye className="h-3.5 w-3.5 mr-1.5" /> View History
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Run History for {analysis.name}</DialogTitle>
+              </DialogHeader>
+              <ScheduledJobHistory runs={analysis.analyserJobRuns ?? []} />
+            </DialogContent>
+          </Dialog>
+          {/* Manage Dialog */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs px-2.5 py-1 h-auto"
+            onClick={() => setManageOpen(true)}
+          >
             <Settings2 className="h-3.5 w-3.5 mr-1.5" /> Manage
           </Button>
+          <ScheduledJobManageDialog
+            open={manageOpen}
+            onOpenChange={setManageOpen}
+            analysis={analysis}
+            onSave={handleSaveSettings}
+            onAbort={handleAbort}
+          />
         </div>
       </CardFooter>
     </Card>
   );
-} 
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUserJobs } from "@/services"; // Import the service function
+import { getUserJobs, getAnalyserJobsForCrawlerJob } from "@/services"; // Import the service function
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"; // If you have a Button component
 import { Globe, CalendarClock, Layers, FileText, Link2, Loader2, CheckCircle2, XCircle, AlertTriangle, List } from "lucide-react";
 import { CrawlerResult } from "@/components/CrawlerResult";
+import { AnalyserResult } from "@/components/AnalyserResult"; // Add this import
 
 interface Job {
   id: number;
@@ -35,6 +36,7 @@ export default function Jobs() {
   const [error, setError] = useState("");
   const [expandedUrls, setExpandedUrls] = useState<Record<string, boolean>>({});
   const [selectedJob, setSelectedJob] = useState<Job | null>(null); // <-- Add this line
+  const [analyserJob, setAnalyserJob] = useState<any | null>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -55,6 +57,20 @@ export default function Jobs() {
 
     fetchJobs();
   }, [page, limit]);
+
+  useEffect(() => {
+    if (selectedJob) {
+      // Fetch analyser jobs for the selected crawler job
+      getAnalyserJobsForCrawlerJob(selectedJob.id)
+        .then((jobs) => {
+          // If multiple analyser jobs, show the first one or adjust as needed
+          setAnalyserJob(Array.isArray(jobs) ? jobs[0] : jobs);
+        })
+        .catch(() => setAnalyserJob(null));
+    } else {
+      setAnalyserJob(null);
+    }
+  }, [selectedJob]);
 
   // Group jobs by initialUrl
   const jobsByUrl = jobs.reduce<Record<string, Job[]>>((acc, job) => {
@@ -172,7 +188,13 @@ export default function Jobs() {
         {/* Right: Job Details and Results */}
         <div className="w-1/2 flex flex-col gap-6">
           {selectedJob ? (
-            <CrawlerResult result={{ crawlerJob: selectedJob }} />
+            <>
+              <CrawlerResult result={{ crawlerJob: selectedJob }} />
+              {/* Show AnalyserResult if analyserJob exists */}
+              {analyserJob && (
+                <AnalyserResult analyserJob={analyserJob} />
+              )}
+            </>
           ) : (
             <Card className="shadow-md dark:bg-gray-850 w-full flex items-center justify-center h-full min-h-[300px]">
               <CardContent>
