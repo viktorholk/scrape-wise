@@ -1,5 +1,11 @@
 node_modules
-
-/.cache
-/build
+# Keep environment variables out of version control
 .env
+
+generated/prisma
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

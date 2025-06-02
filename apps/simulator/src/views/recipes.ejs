@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Our Delicious Recipes</h1>
+
+        <% if (recipes.length === 0) { %>
+            <p>No recipes found. Check back later!</p>
+        <% } else { %>
+            <div class="recipe-grid">
+                <% recipes.forEach(function(recipe) { %>
+                    <div class="recipe-card">
+                        <h2><%= recipe.name %></h2>
+                        
+                        <% if (recipe.description) { %>
+                            <p class="description"><%= recipe.description %></p>
+                        <% } %>
+
+                        <div class="card-meta">
+                            <% if (recipe.prepTimeMinutes) { %>
+                                <span class="meta-item"><strong>Prep:</strong> <%= recipe.prepTimeMinutes %> min</span>
+                            <% } %>
+                            <% if (recipe.cookTimeMinutes) { %>
+                                <span class="meta-item"><strong>Cook:</strong> <%= recipe.cookTimeMinutes %> min</span>
+                            <% } %>
+                            <% if (recipe.servings) { %>
+                                <span class="meta-item"><strong>Servings:</strong> <%= recipe.servings %></span>
+                            <% } %>
+                        </div>
+
+                        <% if (recipe.categories && recipe.categories.length > 0) { %>
+                            <div class="categories">
+                                <% recipe.categories.forEach(function(category) { %>
+                                    <span class="category-tag"><%= category %></span>
+                                <% }); %>
+                            </div>
+                        <% } %>
+
+                        <% if (recipe.instructions && recipe.instructions.length > 0) { %>
+                            <div class="recipe-section instructions-section">
+                                <h3>Instructions:</h3>
+                                <ol>
+                                    <% recipe.instructions.forEach(function(step) { %>
+                                        <li><%= step %></li>
+                                    <% }); %>
+                                </ol>
+                            </div>
+                        <% } %>
+
+                        <% if (recipe.notes) { %>
+                            <div class="recipe-section notes-section">
+                                <h3>Notes:</h3>
+                                <p><%= recipe.notes %></p>
+                            </div>
+                        <% } %>
+
+                        <% if (recipe.rating) { %>
+                            <p class="rating"><strong>Rating:</strong> <%= recipe.rating.toFixed(1) %></p>
+                        <% } else { %>
+                            <p class="rating"><strong>Rating:</strong> N/A</p>
+                        <% } %>
+                    </div>
+                <% }); %>
+            </div>
+
+            <% if (totalPages > 1) { %>
+                <div class="pagination">
+                    <% if (currentPage > 1) { %>
+                        <a href="/recipes?page=<%= currentPage - 1 %>" class="pagination-arrow">&laquo; Previous</a>
+                    <% } else { %>
+                        <span class="pagination-arrow disabled">&laquo; Previous</span>
+                    <% } %>
+
+                    <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="/recipes?page=<%= currentPage + 1 %>" class="pagination-arrow">Next &raquo;</a>
+                    <% } else { %>
+                        <span class="pagination-arrow disabled">Next &raquo;</span>
+                    <% } %>
+                </div>
+            <% } %>
+        <% } %>
+    </div>
+</body>
+</html> 

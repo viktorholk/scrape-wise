@@ -1,11 +1,9 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
-import { CalendarClock, Eye, Settings2, PlayCircle, PauseCircle, AlertTriangle, CheckCircle, InfoIcon, Loader2 } from 'lucide-react';
+import { CalendarClock, Eye, Settings2 } from 'lucide-react';
 import { DataTable } from '@/components/DataTable';
-import type { ScheduledAnalysisJobDisplay, JobStatus } from '../pages/ScheduledJobs.tsx'; // Corrected path
+import type { ScheduledAnalysisJobDisplay, JobStatus } from '../pages/ScheduledJobs.tsx';
 import cronstrue from 'cronstrue';
 
 interface ScheduledJobCardProps {

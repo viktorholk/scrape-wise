@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUserJobs } from "@/services"; // Import the service function
+import { getUserJobs } from "@/services";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"; // Import the Table components
-import { Button } from "@/components/ui/button"; // If you have a Button component
-import { Globe, CalendarClock, Layers, FileText, Link2, Loader2, CheckCircle2, XCircle, AlertTriangle, List } from "lucide-react";
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Globe, CalendarClock, FileText, Loader2, CheckCircle2, XCircle, AlertTriangle, List } from "lucide-react";
 import { CrawlerResult } from "@/components/CrawlerResult";
 
 interface Job {
@@ -33,8 +33,7 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [expandedUrls, setExpandedUrls] = useState<Record<string, boolean>>({});
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null); // <-- Add this line
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -56,12 +55,6 @@ export default function Jobs() {
     fetchJobs();
   }, [page, limit]);
 
-  // Group jobs by initialUrl
-  const jobsByUrl = jobs.reduce<Record<string, Job[]>>((acc, job) => {
-    if (!acc[job.initialUrl]) acc[job.initialUrl] = [];
-    acc[job.initialUrl].push(job);
-    return acc;
-  }, {});
 
   if (loading) {
     return <p>Loading jobs...</p>;
