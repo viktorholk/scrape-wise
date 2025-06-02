@@ -1,7 +1,7 @@
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';
-import type { AnalyserJobForDialog } from '../pages/ScheduledJobs.tsx'; // Adjust path as needed
+import type { AnalyserJobForDialog } from '../pages/ScheduledJobs.tsx';
 
 interface ScheduleAnalysisFormProps {
     analyserJobs: AnalyserJobForDialog[];

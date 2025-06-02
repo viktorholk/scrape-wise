@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
-import { CalendarClock, Eye, Settings2, PlayCircle, PauseCircle, AlertTriangle, CheckCircle, InfoIcon, Loader2 } from 'lucide-react';
+import { CalendarClock, Eye, Settings2, Loader2 } from 'lucide-react';
 import { DataTable } from '@/components/DataTable';
 import type { ScheduledAnalysisJobDisplay, JobStatus } from '../pages/ScheduledJobs.tsx';
 import cronstrue from 'cronstrue';
 import { ScheduledJobHistory } from './ScheduledJobHistory';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'; // Make sure you have these
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScheduledJobManageDialog } from './ScheduledJobManageDialog';
 import { updateScheduledAnalysisJob, deleteScheduledAnalysisJob } from '../services';
 
@@ -17,7 +16,7 @@ interface ScheduledJobCardProps {
   getStatusBadge: (status: ScheduledAnalysisJobDisplay['status']) => JSX.Element;
   getRunStatusIcon: (runStatus?: JobStatus | null) => JSX.Element;
   formatOptionalDate: (dateString?: string | null) => string;
-  onChanged?: () => void; // <-- add this
+  onChanged?: () => void;
 }
 
 export function ScheduledJobCard({
@@ -29,11 +28,10 @@ export function ScheduledJobCard({
 }: ScheduledJobCardProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
-  const [toggling, setToggling] = useState(false); // <-- add this
+  const [toggling, setToggling] = useState(false);
   const latestRun = analysis.analyserJobRuns?.[0];
   const latestResults = latestRun?.results || [];
 
-  // Replace these with your actual API calls
   const handleSaveSettings = async (changes: { name: string; cronExpression: string; enabled: boolean }) => {
     await updateScheduledAnalysisJob(analysis.id, changes);
     onChanged?.();
@@ -49,7 +47,7 @@ export function ScheduledJobCard({
     setToggling(true);
     try {
       await updateScheduledAnalysisJob(analysis.id, { enabled: analysis.status !== "ACTIVE" });
-      onChanged?.(); // Refresh parent data
+      onChanged?.();
     } finally {
       setToggling(false);
     }

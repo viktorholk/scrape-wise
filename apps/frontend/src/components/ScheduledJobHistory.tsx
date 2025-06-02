@@ -52,7 +52,7 @@ export const ScheduledJobHistory: React.FC<ScheduledJobHistoryProps> = ({ runs }
       <CardContent>
         <div className="space-y-2">
           {runs
-            .slice() // copy array
+            .slice()
             .sort((a, b) => parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime())
             .map(run => (
               <div key={run.id} className="flex items-center gap-3 border-b last:border-b-0 py-2">

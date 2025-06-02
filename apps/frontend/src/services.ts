@@ -29,7 +29,7 @@ export async function addScrapeJob(url: string, prompt: string, depth: number, l
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`, 
     },
     body: JSON.stringify({ url, prompt, depth, limit }),
   });
@@ -57,7 +57,7 @@ export async function changePromtJob(jobId: string, prompt: string) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`, 
     },
     body: JSON.stringify({prompt}),
   });
@@ -163,7 +163,7 @@ export async function updateUser(userData: {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`, 
     },
     body: JSON.stringify(userData),
   });
@@ -222,7 +222,6 @@ export function isTokenExpired(token: string | null): boolean {
   if (!token) return true;
   const payload = decodeJwt(token);
   if (!payload || !payload.exp) return true;
-  // exp is in seconds
   return Date.now() >= payload.exp * 1000;
 }
 

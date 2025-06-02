@@ -54,7 +54,7 @@ export function ExtractedDataDisplay({
       });
       setSaveMsg("Preferred scheduled analysis saved!");
       setShowSaveConfirmation(true);
-      setTimeout(() => setShowSaveConfirmation(false), 3000); // Hide after 3 seconds
+      setTimeout(() => setShowSaveConfirmation(false), 3000);
     } catch (e: any) {
       setSaveMsg(e.message || "Failed to save scheduled analysis");
     } finally {

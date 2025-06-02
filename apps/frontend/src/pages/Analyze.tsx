@@ -147,7 +147,6 @@ export default function Analyze() {
 
 
       setTimeout(() => {
-        // refresh
         window.location.reload();
       }, 1000);
     }
@@ -162,7 +161,6 @@ export default function Analyze() {
       return;
     }
 
-    // Set job as in progress (no results yet)
     setJob({ url, prompt, crawlDepth, pageLimit, inProgress: true });
 
     try {

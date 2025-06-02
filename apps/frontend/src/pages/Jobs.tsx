@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUserJobs, getAnalyserJobsForCrawlerJob } from "@/services"; // Import the service function
+import { getUserJobs, getAnalyserJobsForCrawlerJob } from "@/services"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -8,11 +8,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"; // Import the Table components
-import { Button } from "@/components/ui/button"; // If you have a Button component
-import { Globe, CalendarClock, Layers, FileText, Link2, Loader2, CheckCircle2, XCircle, AlertTriangle, List } from "lucide-react";
+} from "@/components/ui/table"; 
+import { Button } from "@/components/ui/button"; 
+import { Globe, CalendarClock, FileText, Loader2, CheckCircle2, XCircle, AlertTriangle, List } from "lucide-react";
 import { CrawlerResult } from "@/components/CrawlerResult";
-import { AnalyserResult } from "@/components/AnalyserResult"; // Add this import
+import { AnalyserResult } from "@/components/AnalyserResult"; 
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { ListTree } from "lucide-react";
 
 interface Job {
   id: number;
@@ -35,8 +37,8 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedUrls, setExpandedUrls] = useState<Record<string, boolean>>({});
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null); // <-- Add this line
-  const [analyserJob, setAnalyserJob] = useState<any | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null); 
+  const [analyserJobs, setAnalyserJobs] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -60,15 +62,13 @@ export default function Jobs() {
 
   useEffect(() => {
     if (selectedJob) {
-      // Fetch analyser jobs for the selected crawler job
       getAnalyserJobsForCrawlerJob(selectedJob.id)
         .then((jobs) => {
-          // If multiple analyser jobs, show the first one or adjust as needed
-          setAnalyserJob(Array.isArray(jobs) ? jobs[0] : jobs);
+          setAnalyserJobs(Array.isArray(jobs) ? jobs : jobs ? [jobs] : []);
         })
-        .catch(() => setAnalyserJob(null));
+        .catch(() => setAnalyserJobs([]));
     } else {
-      setAnalyserJob(null);
+      setAnalyserJobs([]);
     }
   }, [selectedJob]);
 
@@ -190,10 +190,44 @@ export default function Jobs() {
           {selectedJob ? (
             <>
               <CrawlerResult result={{ crawlerJob: selectedJob }} />
-              {/* Show AnalyserResult if analyserJob exists */}
-              {analyserJob && (
-                <AnalyserResult analyserJob={analyserJob} />
-              )}
+              {/* Collapsed Analyser Results */}
+              <Card className="w-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center text-xl gap-3">
+                    <ListTree className="h-6 w-6 mr-2 text-purple-500" />
+                    <span className="tracking-wide">All Analysis Results</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {analyserJobs.length > 0 ? (
+                    <Accordion type="multiple" className="w-full space-y-4 mt-2">
+                      {analyserJobs.map((aj) => (
+                        <AccordionItem
+                          value={`analyser-${aj.id}`}
+                          key={aj.id}
+                          className="mb-2 border rounded-lg bg-muted/40 shadow-sm"
+                        >
+                          <AccordionTrigger className="text-base font-semibold px-4 py-3">
+                            <span>
+                              <span className="font-mono text-purple-700">#{aj.id}</span> – {aj.status}
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-2 pb-4">
+                            <AnalyserResult analyserJob={aj} />
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center py-4">
+                      <h3 className="text-base font-semibold mb-2">No Analysis Results</h3>
+                      <p className="text-muted-foreground mb-2">
+                        No analyser jobs found for this crawl job.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </>
           ) : (
             <Card className="shadow-md dark:bg-gray-850 w-full flex items-center justify-center h-full min-h-[300px]">

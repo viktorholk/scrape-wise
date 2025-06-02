@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle2, FileTextIcon, ListTree } from "lucide-react";
+import { DataTable } from "./DataTable";
 
 type AnalyserResultProps = {
   analyserJob: {
@@ -63,23 +63,15 @@ export function AnalyserResult({ analyserJob }: AnalyserResultProps) {
         <div>
           <Label className="font-semibold text-base">Analysis Results</Label>
           {analyserJob.results && analyserJob.results.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full mt-2 space-y-2">
-              {analyserJob.results.map((result, idx) => (
-                <AccordionItem value={`item-${idx}`} key={idx} className="bg-slate-50 dark:bg-slate-800/30 rounded-md border px-3">
-                  <AccordionTrigger className="text-sm hover:no-underline py-3">
-                    <div className="flex items-center truncate w-full">
-                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500 flex-shrink-0" />
-                      <span className="truncate font-medium">Result {idx + 1}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="text-xs text-muted-foreground pt-1 pb-3 space-y-1.5">
-                    <pre className="bg-slate-100 dark:bg-slate-900 rounded p-2 overflow-x-auto">
-                      {JSON.stringify(result, null, 2)}
-                    </pre>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <DataTable
+              data={analyserJob.results.map(row =>
+                row.map(field => ({
+                  label: field.label ?? "",
+                  value: field.value ?? "",
+                  ...field,
+                }))
+              )}
+            />
           ) : (
             <div className="text-sm text-muted-foreground mt-2">No analysis results available.</div>
           )}

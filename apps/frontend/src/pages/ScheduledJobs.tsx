@@ -301,7 +301,7 @@ export default function ScheduledJobs() {
             getStatusBadge={getStatusBadge} 
             getRunStatusIcon={getRunStatusIcon} 
             formatOptionalDate={formatOptionalDate} 
-            onChanged={handleFetchAnalyses} // <-- add this line
+            onChanged={handleFetchAnalyses} 
           />
         ))}
       </div>
