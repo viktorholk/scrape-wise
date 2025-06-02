@@ -103,7 +103,7 @@ export default function ScheduledJobs() {
   const formatOptionalDate = useCallback((dateString?: string | null) => {
     if (!dateString) return "N/A";
     try {
-      return formatDistanceToNow(parseISO(dateString), { addSuffix: true });
+      return formatDistanceToNow(parseISO(dateString), { addSuffix: true, includeSeconds: true });
     } catch (e) {
       console.warn("Date formatting error for:", dateString, e);
       return "Invalid date";
@@ -264,7 +264,7 @@ export default function ScheduledJobs() {
               <PlusIcon className="h-4 w-4 mr-2" /> Schedule New Analysis
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className='max-w-2xl'>
             <DialogHeader>
               <DialogTitle>Schedule New Analysis</DialogTitle>
             </DialogHeader>

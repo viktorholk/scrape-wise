@@ -81,6 +81,10 @@ router.post(
       },
     });
 
+    if (!templateAnalysisJob) {
+      throw new NotFoundError(`Template AnalyserJob with ID ${originalAnalysisJobId} not found or does not belong to the user.`);
+    }
+
     const templateCrawlerJob = await prisma.crawlerJob.findUnique({
       where: {
         id: templateAnalysisJob?.crawlerJobId,

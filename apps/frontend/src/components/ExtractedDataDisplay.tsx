@@ -99,6 +99,7 @@ export function ExtractedDataDisplay({
                     onChange={e => setCronInterval(e.target.value)}
                     disabled={saving || showSaveConfirmation}
                   >
+                    <option value="*/1 * * * *">1 min</option>
                     <option value="*/5 * * * *">5 min</option>
                     <option value="*/10 * * * *">10 min</option>
                     <option value="0 * * * *">1 hour</option>

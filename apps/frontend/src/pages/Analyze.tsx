@@ -83,8 +83,8 @@ interface WsMessage {
 }
 
 export default function Analyze() {
-  const [url, setUrl] = useState("http://localhost:3001/ssr/recipes");
-  const [prompt, setPrompt] = useState("Extract all ratings");
+  const [url, setUrl] = useState("http://localhost:3001/recipes");
+  const [prompt, setPrompt] = useState("Extract all recipe names and ratings");
   const [crawlDepth, setCrawlDepth] = useState(2);
   const [pageLimit, setPageLimit] = useState(10);
   const [job, setJob] = useState<ScrapeJob | null>(null);
@@ -419,7 +419,7 @@ export default function Analyze() {
           <ExtractedDataDisplay
             extractedData={job.results.analyserJob.results}
             analyserPrompt={job.results.analyserJob.prompt}
-            jobId={job.results.crawlerJob.id}
+            jobId={job.results.analyserJob.id}
           />
         )}
 

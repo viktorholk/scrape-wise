@@ -17,7 +17,7 @@ interface ScheduleAnalysisFormProps {
     loadingJobs: boolean;
 }
 
-const MAX_PROMPT_LENGTH = 50;
+const MAX_PROMPT_LENGTH = 35;
 
 export function ScheduleAnalysisForm({
     analyserJobs,
@@ -77,6 +77,7 @@ export function ScheduleAnalysisForm({
                         <SelectValue placeholder="Select cron interval" />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="*/1 * * * *">Every 1 minute</SelectItem>
                         <SelectItem value="*/5 * * * *">Every 5 minutes</SelectItem>
                         <SelectItem value="*/10 * * * *">Every 10 minutes</SelectItem>
                         <SelectItem value="0 * * * *">Every hour</SelectItem>

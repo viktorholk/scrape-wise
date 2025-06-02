@@ -176,7 +176,7 @@ export function scheduleJob(scheduledJob: ScheduledAnalysisJob): void {
 }
 
 export async function updateScheduledJob(scheduledJobId: number): Promise<void> {
-    unscheduleJob(scheduledJobId);// Always unschedule first
+    unscheduleJob(scheduledJobId);
     try {
         const scheduledJob = await prisma.scheduledAnalysisJob.findUnique({ 
             where: { id: scheduledJobId } 
