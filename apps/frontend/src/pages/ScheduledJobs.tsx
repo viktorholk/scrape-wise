@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getScheduledAnalysis, getAnalyserJobs, setScheduledAnalysis } from '../services';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, CalendarClock, PlayCircle, PauseCircle, AlertTriangle, CheckCircle, Settings2, Eye, InfoIcon, Loader2 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
+import { PlusIcon, CalendarClock, PlayCircle, PauseCircle, AlertTriangle, CheckCircle, InfoIcon, Loader2 } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardFooter} from '@/components/ui/card';
 import { Badge } from "@/components/ui/badge";
 import type { ExtractedField } from './Analyze';
 import { formatDistanceToNow, parseISO } from 'date-fns';
