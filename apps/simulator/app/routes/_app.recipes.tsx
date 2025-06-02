@@ -28,8 +28,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
       skip,
       take: recipesPerPage,
       orderBy: { createdAt: "desc" },
-      // Ensure all necessary fields are selected if not by default
-      // select: { id: true, name: true, description: true, rating: true, categories: true, imageUrl: true, prepTimeMinutes: true, cookTimeMinutes: true, servings: true }
     }),
     prisma.recipe.count(),
   ]);
@@ -79,6 +77,10 @@ export default function RecipesPage() {
           <p className="mt-3 text-lg text-slate-600">
             Page {currentPage} of {totalPages} &bull; Discover your next favorite meal!
           </p>
+
+          <Link to="/create" className="mt-4 px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600 transition-colors">
+            Create New Recipe
+          </Link>
         </header>
 
         {recipes.length === 0 ? (
@@ -91,7 +93,6 @@ export default function RecipesPage() {
           <div className="space-y-2">
             {recipes.map((recipe) => (
               <article key={recipe.id} className="w-full flex flex-col md:flex-row md:items-center overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-300 ease-in-out hover:shadow-3xl h-[350px] md:h-[350px]">
-                {recipe.imageUrl && (
                   <div className="md:w-2/5 md:h-[250px] h-64 w-full flex-shrink-0">
                     <img
                       src={"https://images.immediate.co.uk/production/volatile/sites/30/2013/05/spaghetti-carbonara-382837d.jpg?resize=768,574"}
@@ -100,7 +101,6 @@ export default function RecipesPage() {
                       onError={(e) => (e.currentTarget.style.display = 'none')} 
                     />
                   </div>
-                )}
                 <div className="flex flex-col justify-between p-6 md:p-8 flex-grow">
                   <div>
                     <h2 className="text-3xl font-bold text-sky-700 hover:text-sky-600 transition-colors">
@@ -152,7 +152,7 @@ export default function RecipesPage() {
         {totalPages > 1 && (
           <nav className="mt-4 flex items-center justify-between" aria-label="Pagination">
             <Link
-              to={`/ssr/recipes?page=${currentPage - 1}`}
+              to={`/recipes?page=${currentPage - 1}`}
               className={`inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${
                 currentPage <= 1 ? "pointer-events-none opacity-50" : ""
               }`}
@@ -165,7 +165,7 @@ export default function RecipesPage() {
               Page {currentPage} of {totalPages}
             </span>
             <Link
-              to={`/ssr/recipes?page=${currentPage + 1}`}
+              to={`/recipes?page=${currentPage + 1}`}
               className={`inline-flex items-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${
                 currentPage >= totalPages ? "pointer-events-none opacity-50" : ""
               }`}

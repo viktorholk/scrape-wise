@@ -1,4 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
+import { Link } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -13,6 +14,9 @@ export default function Index() {
         <h1 className="mb-4 text-6xl font-bold tracking-tight">
           Scrape Wise Simulator
         </h1>
+        <Link to="/recipes" className="mt-4 px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600 transition-colors">
+          View Recipes
+        </Link>
    </div>
   );
 }
