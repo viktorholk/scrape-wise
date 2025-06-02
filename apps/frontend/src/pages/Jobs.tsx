@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUserJobs } from "@/services";
+import { getUserJobs, getAnalyserJobsForCrawlerJob } from "@/services";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -10,8 +10,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Globe, CalendarClock, FileText, Loader2, CheckCircle2, XCircle, AlertTriangle, List } from "lucide-react";
+import {
+  Globe,
+  CalendarClock,
+  FileText,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  List,
+} from "lucide-react";
 import { CrawlerResult } from "@/components/CrawlerResult";
+import { AnalyserResult } from "@/components/AnalyserResult";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
+import { ListTree } from "lucide-react";
 
 interface Job {
   id: number;
@@ -34,6 +51,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [analyserJobs, setAnalyserJobs] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -55,6 +73,17 @@ export default function Jobs() {
     fetchJobs();
   }, [page, limit]);
 
+  useEffect(() => {
+    if (selectedJob) {
+      getAnalyserJobsForCrawlerJob(selectedJob.id)
+        .then((jobs) => {
+          setAnalyserJobs(Array.isArray(jobs) ? jobs : jobs ? [jobs] : []);
+        })
+        .catch(() => setAnalyserJobs([]));
+    } else {
+      setAnalyserJobs([]);
+    }
+  }, [selectedJob]);
 
   if (loading) {
     return <p>Loading jobs...</p>;
@@ -71,7 +100,8 @@ export default function Jobs() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Jobs</h2>
           <p className="text-muted-foreground">
-            View and manage your crawl and analysis jobs. Click a job to see details.
+            View and manage your crawl and analysis jobs. Click a job to see
+            details.
           </p>
         </div>
       </div>
@@ -108,24 +138,39 @@ export default function Jobs() {
                           className={`cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedJob?.id === job.id ? "bg-muted" : ""}`}
                           onClick={() => setSelectedJob(job)}
                         >
-                          <TableCell className="truncate max-w-[180px]" title={job.initialUrl}>
+                          <TableCell
+                            className="truncate max-w-[180px]"
+                            title={job.initialUrl}
+                          >
                             <Globe className="inline h-4 w-4 mr-1 text-muted-foreground" />
                             {job.initialUrl}
                           </TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
-                              job.status === "COMPLETED"
-                                ? "bg-green-100 text-green-700"
-                                : job.status === "STARTED"
-                                ? "bg-blue-100 text-blue-700"
-                                : job.status === "ERROR"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-700"
-                            }`}>
-                              {job.status === "COMPLETED" && <CheckCircle2 className="h-3 w-3" />}
-                              {job.status === "STARTED" && <Loader2 className="h-3 w-3 animate-spin" />}
-                              {job.status === "ERROR" && <AlertTriangle className="h-3 w-3" />}
-                              {job.status !== "COMPLETED" && job.status !== "STARTED" && job.status !== "ERROR" && <XCircle className="h-3 w-3" />}
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 ${
+                                job.status === "COMPLETED"
+                                  ? "bg-green-100 text-green-700"
+                                  : job.status === "STARTED"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : job.status === "ERROR"
+                                      ? "bg-red-100 text-red-700"
+                                      : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {job.status === "COMPLETED" && (
+                                <CheckCircle2 className="h-3 w-3" />
+                              )}
+                              {job.status === "STARTED" && (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              )}
+                              {job.status === "ERROR" && (
+                                <AlertTriangle className="h-3 w-3" />
+                              )}
+                              {job.status !== "COMPLETED" &&
+                                job.status !== "STARTED" &&
+                                job.status !== "ERROR" && (
+                                  <XCircle className="h-3 w-3" />
+                                )}
                               {job.status}
                             </span>
                           </TableCell>
@@ -150,7 +195,9 @@ export default function Jobs() {
                       Page {page} of {totalPages}
                     </span>
                     <Button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page === totalPages}
                       variant="secondary"
                     >
@@ -165,7 +212,55 @@ export default function Jobs() {
         {/* Right: Job Details and Results */}
         <div className="w-1/2 flex flex-col gap-6">
           {selectedJob ? (
-            <CrawlerResult result={{ crawlerJob: selectedJob }} />
+            <>
+              <CrawlerResult result={{ crawlerJob: selectedJob }} />
+              {/* Collapsed Analyser Results */}
+              <Card className="w-full">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center text-xl gap-3">
+                    <ListTree className="h-6 w-6 mr-2 text-purple-500" />
+                    <span className="tracking-wide">All Analysis Results</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {analyserJobs.length > 0 ? (
+                    <Accordion
+                      type="multiple"
+                      className="w-full space-y-4 mt-2"
+                    >
+                      {analyserJobs.map((aj) => (
+                        <AccordionItem
+                          value={`analyser-${aj.id}`}
+                          key={aj.id}
+                          className="mb-2 border rounded-lg bg-muted/40 shadow-sm"
+                        >
+                          <AccordionTrigger className="text-base font-semibold px-4 py-3">
+                            <span>
+                              <span className="font-mono text-purple-700">
+                                #{aj.id}
+                              </span>{" "}
+                              – {aj.status}
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-2 pb-4">
+                            <AnalyserResult analyserJob={aj} />
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center py-4">
+                      <h3 className="text-base font-semibold mb-2">
+                        No Analysis Results
+                      </h3>
+                      <p className="text-muted-foreground mb-2">
+                        No analyser jobs found for this crawl job.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </>
           ) : (
             <Card className="shadow-md dark:bg-gray-850 w-full flex items-center justify-center h-full min-h-[300px]">
               <CardContent>

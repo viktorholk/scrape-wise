@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getScheduledAnalysis, getAnalyserJobs, setScheduledAnalysis } from '../services';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, CalendarClock, PlayCircle, PauseCircle, AlertTriangle, CheckCircle, InfoIcon, Loader2 } from 'lucide-react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardFooter} from '@/components/ui/card';
 import { Badge } from "@/components/ui/badge";
 import type { ExtractedField } from './Analyze';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -12,7 +12,7 @@ import { ScheduleAnalysisForm } from '../components/ScheduleAnalysisForm';
 
 export type JobStatus = "STARTED" | "COMPLETED" | "STOPPED" | "ERROR";
 
-interface AnalyserJobRun {
+export interface AnalyserJobRun {
   id: number;
   status: JobStatus;
   results: ExtractedField[][];
@@ -301,6 +301,7 @@ export default function ScheduledJobs() {
             getStatusBadge={getStatusBadge} 
             getRunStatusIcon={getRunStatusIcon} 
             formatOptionalDate={formatOptionalDate} 
+            onChanged={handleFetchAnalyses} 
           />
         ))}
       </div>

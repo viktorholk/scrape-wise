@@ -29,7 +29,7 @@ export async function addScrapeJob(url: string, prompt: string, depth: number, l
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`, 
     },
     body: JSON.stringify({ url, prompt, depth, limit }),
   });
@@ -57,7 +57,7 @@ export async function changePromtJob(jobId: string, prompt: string) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`, 
     },
     body: JSON.stringify({prompt}),
   });
@@ -163,7 +163,7 @@ export async function updateUser(userData: {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+      'Authorization': `Bearer ${token}`, 
     },
     body: JSON.stringify(userData),
   });
@@ -222,7 +222,6 @@ export function isTokenExpired(token: string | null): boolean {
   if (!token) return true;
   const payload = decodeJwt(token);
   if (!payload || !payload.exp) return true;
-  // exp is in seconds
   return Date.now() >= payload.exp * 1000;
 }
 
@@ -309,5 +308,93 @@ export async function getAnalyserJobs() {
   }
 
   return response.json();
+}
+
+/**
+ * Retrieves all analyser jobs for a specific crawler job ID for the authenticated user.
+ * @param crawlerJobId - The crawler job's ID.
+ * @returns The analyser jobs from the server.
+ */
+export async function getAnalyserJobsForCrawlerJob(crawlerJobId: number) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/analyser-jobs/by-crawler/${crawlerJobId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to fetch analyser jobs for crawler job');
+  }
+
+  return response.json();
+}
+
+/**
+ * Updates a scheduled analysis job.
+ * @param id - The scheduled job's ID.
+ * @param updates - The fields to update (name, cronExpression, prompt, enabled).
+ * @returns The updated scheduled job from the server.
+ */
+export async function updateScheduledAnalysisJob(
+  id: number,
+  updates: {
+    name?: string;
+    cronExpression?: string;
+    prompt?: string;
+    enabled?: boolean;
+  }
+) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/scheduled-analysis/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json();
+    throw new Error(message || 'Failed to update scheduled analysis job');
+  }
+
+  return response.json();
+}
+
+/**
+ * Deletes a scheduled analysis job.
+ * @param id - The scheduled job's ID.
+ */
+export async function deleteScheduledAnalysisJob(id: number) {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication token not found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/scheduled-analysis/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const { message } = await response.json().catch(() => ({}));
+    throw new Error(message || 'Failed to delete scheduled analysis job');
+  }
 }
 
