@@ -8,10 +8,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>Our Delicious Recipes</h1>
+        <header class="page-header">
+            <h1>Our Delicious Recipes</h1>
+            <div class="create-recipe-link-container">
+                <a href="/simulator/recipes/new" class="button button-primary">Create New Recipe</a>
+            </div>
+        </header>
 
         <% if (recipes.length === 0) { %>
-            <p>No recipes found. Check back later!</p>
+            <div class="no-recipes-message">
+                <p>No recipes found. How about creating one?</p>
+            </div>
         <% } else { %>
             <div class="recipe-grid">
                 <% recipes.forEach(function(recipe) { %>
@@ -47,7 +54,7 @@
                                 <h3>Instructions:</h3>
                                 <ol>
                                     <% recipe.instructions.forEach(function(step) { %>
-                                        <li><%= step %></li>
+                                        <li><%- step.replace(/\n/g, '<br>') %></li>
                                     <% }); %>
                                 </ol>
                             </div>
@@ -56,11 +63,11 @@
                         <% if (recipe.notes) { %>
                             <div class="recipe-section notes-section">
                                 <h3>Notes:</h3>
-                                <p><%= recipe.notes %></p>
+                                <p><%- recipe.notes.replace(/\n/g, '<br>') %></p>
                             </div>
                         <% } %>
 
-                        <% if (recipe.rating) { %>
+                        <% if (typeof recipe.rating === 'number') { %>
                             <p class="rating"><strong>Rating:</strong> <%= recipe.rating.toFixed(1) %></p>
                         <% } else { %>
                             <p class="rating"><strong>Rating:</strong> N/A</p>
@@ -72,7 +79,7 @@
             <% if (totalPages > 1) { %>
                 <div class="pagination">
                     <% if (currentPage > 1) { %>
-                        <a href="/recipes?page=<%= currentPage - 1 %>" class="pagination-arrow">&laquo; Previous</a>
+                        <a href="/simulator/recipes?page=<%= currentPage - 1 %>" class="pagination-arrow">&laquo; Previous</a>
                     <% } else { %>
                         <span class="pagination-arrow disabled">&laquo; Previous</span>
                     <% } %>
@@ -80,7 +87,7 @@
                     <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
 
                     <% if (currentPage < totalPages) { %>
-                        <a href="/recipes?page=<%= currentPage + 1 %>" class="pagination-arrow">Next &raquo;</a>
+                        <a href="/simulator/recipes?page=<%= currentPage + 1 %>" class="pagination-arrow">Next &raquo;</a>
                     <% } else { %>
                         <span class="pagination-arrow disabled">Next &raquo;</span>
                     <% } %>

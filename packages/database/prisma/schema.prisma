@@ -113,7 +113,6 @@ model Recipe {
   prepTimeMinutes Int?
   cookTimeMinutes Int?
   servings        Int?
-  ingredients     Json
   instructions    String[]
   notes           String?
 
