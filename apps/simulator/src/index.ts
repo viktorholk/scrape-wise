@@ -14,11 +14,11 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req: Request, res: Response) => {
-  res.redirect('/recipes');
+app.get('/simulator', (req: Request, res: Response) => {
+  res.redirect('/simulator/recipes');
 });
 
-app.get('/recipes', async (req: Request, res: Response) => {
+app.get('/simulator/recipes', async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const recipesPerPage = 3;
   const skip = (page - 1) * recipesPerPage;
