@@ -8,6 +8,7 @@ COPY ./apps/backend/package.json ./apps/backend/
 COPY ./packages/database/package.json ./packages/database/
 
 COPY ./packages/database/prisma ./packages/database/prisma/
+COPY ./packages/database/scripts ./packages/database/scripts/
 
 RUN pnpm install --recursive --frozen-lockfile
 
@@ -34,6 +35,7 @@ COPY --from=builder /builder/packages/database/package.json ./packages/database/
 
 COPY --from=builder /builder/packages/database/prisma ./packages/database/prisma/
 COPY --from=builder /builder/packages/database/src ./packages/database/src/
+COPY --from=builder /builder/packages/database/scripts ./packages/database/scripts/
 
 COPY --from=builder /builder/apps/backend/build ./apps/backend/build/
 
